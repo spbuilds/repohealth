@@ -82,6 +82,13 @@ repohealth .
 # Analyze a specific repo
 repohealth /path/to/repo
 
+# JSON output (for CI pipelines, scripts, dashboards)
+repohealth . --format json
+
+# Score only (for badges, automation)
+repohealth . --score-only
+# Output: 78/100 (B+)
+
 # Disable colored output
 repohealth . --no-color
 ```

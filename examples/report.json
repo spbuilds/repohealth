@@ -1,0 +1,189 @@
+{
+  "version": "0.1.1",
+  "repo_path": "/home/dev/my-project",
+  "timestamp": "2026-03-26T12:00:00Z",
+  "duration_ms": 15,
+  "score": 78,
+  "max_score": 100,
+  "grade": "B+",
+  "categories": [
+    {
+      "name": "docs",
+      "label": "Documentation",
+      "score": 13,
+      "max_score": 15
+    },
+    {
+      "name": "tests",
+      "label": "Testing",
+      "score": 14,
+      "max_score": 14
+    },
+    {
+      "name": "cicd",
+      "label": "CI/CD",
+      "score": 6,
+      "max_score": 6
+    },
+    {
+      "name": "activity",
+      "label": "Activity",
+      "score": 5,
+      "max_score": 8
+    }
+  ],
+  "checks": [
+    {
+      "id": "DOC-01",
+      "category": "docs",
+      "name": "README exists",
+      "status": "full",
+      "points": 4,
+      "max_points": 4,
+      "details": "README.md found",
+      "suggestion": ""
+    },
+    {
+      "id": "DOC-02",
+      "category": "docs",
+      "name": "README has content",
+      "status": "full",
+      "points": 2,
+      "max_points": 2,
+      "details": "README has substantive content",
+      "suggestion": ""
+    },
+    {
+      "id": "DOC-03",
+      "category": "docs",
+      "name": "LICENSE exists",
+      "status": "full",
+      "points": 3,
+      "max_points": 3,
+      "details": "LICENSE found",
+      "suggestion": ""
+    },
+    {
+      "id": "DOC-04",
+      "category": "docs",
+      "name": "CONTRIBUTING exists",
+      "status": "none",
+      "points": 0,
+      "max_points": 2,
+      "details": "No CONTRIBUTING file found",
+      "suggestion": "Add a CONTRIBUTING.md with contribution guidelines"
+    },
+    {
+      "id": "DOC-05",
+      "category": "docs",
+      "name": "CODE_OF_CONDUCT exists",
+      "status": "none",
+      "points": 0,
+      "max_points": 1,
+      "details": "No CODE_OF_CONDUCT file found",
+      "suggestion": "Add a CODE_OF_CONDUCT.md (Contributor Covenant recommended)"
+    },
+    {
+      "id": "DOC-06",
+      "category": "docs",
+      "name": "SECURITY.md exists",
+      "status": "full",
+      "points": 2,
+      "max_points": 2,
+      "details": "SECURITY.md found",
+      "suggestion": ""
+    },
+    {
+      "id": "DOC-07",
+      "category": "docs",
+      "name": "CHANGELOG exists",
+      "status": "full",
+      "points": 1,
+      "max_points": 1,
+      "details": "CHANGELOG.md found",
+      "suggestion": ""
+    },
+    {
+      "id": "TST-01",
+      "category": "tests",
+      "name": "Test files detected",
+      "status": "full",
+      "points": 8,
+      "max_points": 8,
+      "details": "42 test files",
+      "suggestion": ""
+    },
+    {
+      "id": "TST-02",
+      "category": "tests",
+      "name": "Test directory exists",
+      "status": "full",
+      "points": 2,
+      "max_points": 2,
+      "details": "tests/",
+      "suggestion": ""
+    },
+    {
+      "id": "TST-03",
+      "category": "tests",
+      "name": "Test framework configured",
+      "status": "full",
+      "points": 4,
+      "max_points": 4,
+      "details": "go test (built-in)",
+      "suggestion": ""
+    },
+    {
+      "id": "CI-01",
+      "category": "cicd",
+      "name": "CI configuration exists",
+      "status": "full",
+      "points": 6,
+      "max_points": 6,
+      "details": "GitHub Actions",
+      "suggestion": ""
+    },
+    {
+      "id": "ACT-01",
+      "category": "activity",
+      "name": "Recent commit",
+      "status": "full",
+      "points": 5,
+      "max_points": 5,
+      "details": "2 days ago",
+      "suggestion": ""
+    },
+    {
+      "id": "ACT-03",
+      "category": "activity",
+      "name": "Contributors",
+      "status": "none",
+      "points": 0,
+      "max_points": 3,
+      "details": "1 contributor",
+      "suggestion": "Single contributor — consider inviting collaborators"
+    }
+  ],
+  "suggestions": [
+    {
+      "check_id": "ACT-03",
+      "impact": 3,
+      "message": "Single contributor — consider inviting collaborators"
+    },
+    {
+      "check_id": "DOC-04",
+      "impact": 2,
+      "message": "Add a CONTRIBUTING.md with contribution guidelines"
+    },
+    {
+      "check_id": "DOC-05",
+      "impact": 1,
+      "message": "Add a CODE_OF_CONDUCT.md (Contributor Covenant recommended)"
+    }
+  ],
+  "languages": {
+    "Go": 145,
+    "Shell": 12
+  },
+  "files_analyzed": 189
+}
