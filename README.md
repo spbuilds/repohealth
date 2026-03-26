@@ -13,6 +13,14 @@ RepoHealth analyzes a repository's documentation, tests, CI/CD configuration, an
 - **Fast** — analyzes 58,000 files in under 300ms.
 - **Offline** — no network access, no API keys, no accounts.
 
+**What RepoHealth is NOT:**
+- Not a code quality analyzer (use SonarQube)
+- Not a security vulnerability scanner (use Trivy, Snyk)
+- Not a test runner or coverage tool (use your framework's CLI)
+- Not a dependency update tool (use Dependabot, Renovate)
+
+RepoHealth measures *repository maturity and project hygiene*, not code quality.
+
 **Use cases:** Pre-publish repo audit &middot; CI quality gates &middot; OSS evaluation before contributing
 
 ## Example Output

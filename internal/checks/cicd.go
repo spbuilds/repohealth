@@ -108,6 +108,19 @@ func containsAny(lines []string, substrings []string) bool {
 	return false
 }
 
+// ciContainsAny returns true if any CI config line contains any of the given patterns (case-insensitive).
+func ciContainsAny(lines []string, patterns []string) bool {
+	for _, line := range lines {
+		lower := strings.ToLower(line)
+		for _, p := range patterns {
+			if strings.Contains(lower, p) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // CI-02: CI runs tests
 type CIRunsTestsCheck struct{}
 
@@ -126,12 +139,19 @@ func (c *CIRunsTestsCheck) Run(ctx *model.ScanContext) model.CheckResult {
 	}
 
 	lines := readCIConfigs(ctx)
-	testCommands := []string{
-		"npm test", "pytest", "go test", "cargo test",
-		"mvn test", "rake test", "rspec",
+	testPatterns := []string{
+		"npm test", "pnpm test", "yarn test", "bun test",
+		"vitest", "jest", "mocha", "ava",
+		"pytest", "python -m pytest", "tox",
+		"go test", "gotestsum",
+		"cargo test",
+		"mvn test", "gradle test",
+		"make test", "turbo test", "nx test",
+		"rake test", "rspec", "bundle exec rspec",
+		"phpunit",
 	}
 
-	if containsAny(lines, testCommands) {
+	if ciContainsAny(lines, testPatterns) {
 		return model.CheckResult{
 			ID: c.ID(), Category: c.Category(), Name: c.Name(),
 			Status: model.StatusFull, Points: c.MaxPoints(), MaxPoints: c.MaxPoints(),
@@ -164,12 +184,17 @@ func (c *CIRunsLinterCheck) Run(ctx *model.ScanContext) model.CheckResult {
 	}
 
 	lines := readCIConfigs(ctx)
-	lintCommands := []string{
-		"eslint", "ruff", "golangci-lint", "clippy",
-		"checkstyle", "pylint", "flake8", "rubocop",
+	lintPatterns := []string{
+		"eslint", "biome", "oxlint", "prettier --check",
+		"ruff", "flake8", "pylint", "mypy", "black --check",
+		"golangci-lint", "go vet", "staticcheck",
+		"clippy", "cargo clippy",
+		"checkstyle", "spotbugs",
+		"rubocop", "standardrb",
+		"make lint", "pnpm lint", "yarn lint", "npm run lint",
 	}
 
-	if containsAny(lines, lintCommands) {
+	if ciContainsAny(lines, lintPatterns) {
 		return model.CheckResult{
 			ID: c.ID(), Category: c.Category(), Name: c.Name(),
 			Status: model.StatusFull, Points: c.MaxPoints(), MaxPoints: c.MaxPoints(),
@@ -202,12 +227,17 @@ func (c *CIRunsBuildCheck) Run(ctx *model.ScanContext) model.CheckResult {
 	}
 
 	lines := readCIConfigs(ctx)
-	buildCommands := []string{
-		"npm run build", "go build", "cargo build",
-		"mvn package", "gradle build", "make build",
+	buildPatterns := []string{
+		"npm run build", "pnpm build", "yarn build", "bun build",
+		"vite build", "next build", "nuxt build",
+		"go build", "goreleaser",
+		"cargo build",
+		"mvn package", "gradle build", "gradle assemble",
+		"make build", "turbo build", "nx build",
+		"docker build",
 	}
 
-	if containsAny(lines, buildCommands) {
+	if ciContainsAny(lines, buildPatterns) {
 		return model.CheckResult{
 			ID: c.ID(), Category: c.Category(), Name: c.Name(),
 			Status: model.StatusFull, Points: c.MaxPoints(), MaxPoints: c.MaxPoints(),

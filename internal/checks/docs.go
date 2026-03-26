@@ -1,6 +1,11 @@
 package checks
 
-import "github.com/spbuilds/repohealth/internal/model"
+import (
+	"strings"
+
+	"github.com/spbuilds/repohealth/internal/model"
+	"github.com/spbuilds/repohealth/internal/scanner"
+)
 
 // DOC-01: README exists
 type ReadmeExistsCheck struct{}
@@ -35,13 +40,49 @@ func (c *ReadmeContentCheck) Category() string { return "docs" }
 func (c *ReadmeContentCheck) Name() string     { return "README has content" }
 func (c *ReadmeContentCheck) MaxPoints() int   { return 2 }
 
+func countReadmeSections(ctx *model.ScanContext) int {
+	readmeNames := []string{"README.md", "README", "README.rst", "readme.md", "Readme.md"}
+	for _, name := range readmeNames {
+		if path, ok := ctx.HasRootFile(name); ok {
+			lines, err := scanner.ReadFileLines(ctx.RepoPath, path)
+			if err != nil || lines == nil {
+				return 0
+			}
+			sectionKeywords := []string{"install", "usage", "example", "getting started", "contribut", "license", "config", "api", "feature", "setup", "quickstart"}
+			count := 0
+			for _, line := range lines {
+				lower := strings.ToLower(strings.TrimSpace(line))
+				if strings.HasPrefix(lower, "#") {
+					for _, kw := range sectionKeywords {
+						if strings.Contains(lower, kw) {
+							count++
+							break
+						}
+					}
+				}
+			}
+			return count
+		}
+	}
+	return 0
+}
+
 func (c *ReadmeContentCheck) Run(ctx *model.ScanContext) model.CheckResult {
 	size := ctx.RootFileSize("README.md", "README", "README.rst", "readme.md", "Readme.md")
 	if size > 100 {
+		sections := countReadmeSections(ctx)
+		if sections >= 3 {
+			return model.CheckResult{
+				ID: c.ID(), Category: c.Category(), Name: c.Name(),
+				Status: model.StatusFull, Points: c.MaxPoints(), MaxPoints: c.MaxPoints(),
+				Details: "README has substantive content with sections",
+			}
+		}
 		return model.CheckResult{
 			ID: c.ID(), Category: c.Category(), Name: c.Name(),
-			Status: model.StatusFull, Points: c.MaxPoints(), MaxPoints: c.MaxPoints(),
-			Details: "README has substantive content",
+			Status: model.StatusPartial, Points: c.MaxPoints() / 2, MaxPoints: c.MaxPoints(),
+			Details:    "README has content but lacks key sections",
+			Suggestion: "Expand README with installation, usage, and example sections",
 		}
 	}
 	if size >= 0 {

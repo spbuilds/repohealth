@@ -9,16 +9,18 @@ import (
 	"github.com/spbuilds/repohealth/internal/scanner"
 )
 
-var secretPatterns = []*secretPattern{
-	{re: regexp.MustCompile(`AKIA[A-Z0-9]{16}`), label: "AWS key pattern detected"},
-	{re: regexp.MustCompile(`ghp_[a-zA-Z0-9]{36}`), label: "GitHub token pattern detected"},
-	{re: regexp.MustCompile(`sk-[a-zA-Z0-9]{48}`), label: "API key pattern detected"},
-	{re: regexp.MustCompile(`-----BEGIN .{0,30}PRIVATE KEY`), label: "Private key block detected"},
-}
-
-type secretPattern struct {
-	re    *regexp.Regexp
-	label string
+var secretPatterns = []struct {
+	name    string
+	pattern *regexp.Regexp
+}{
+	{"AWS access key", regexp.MustCompile(`AKIA[0-9A-Z]{16}`)},
+	{"GitHub token", regexp.MustCompile(`ghp_[A-Za-z0-9]{36}`)},
+	{"GitHub OAuth", regexp.MustCompile(`gho_[A-Za-z0-9]{36}`)},
+	{"Slack token", regexp.MustCompile(`xox[baprs]-[A-Za-z0-9-]{10,}`)},
+	{"Stripe secret key", regexp.MustCompile(`sk_live_[A-Za-z0-9]{24,}`)},
+	{"Google API key", regexp.MustCompile(`AIza[0-9A-Za-z_-]{35}`)},
+	{"Private key block", regexp.MustCompile(`-----BEGIN\s+(RSA|EC|OPENSSH|DSA)?\s*PRIVATE KEY-----`)},
+	{"Generic secret assignment", regexp.MustCompile(`(?i)(password|secret|api_key|apikey|token)\s*[:=]\s*['"][^'"]{8,}['"]`)},
 }
 
 // SEC-02: No secrets in repo
@@ -63,11 +65,11 @@ func (c *NoSecretsCheck) Run(ctx *model.ScanContext) model.CheckResult {
 
 		for _, line := range lines {
 			for _, sp := range secretPatterns {
-				if sp.re.MatchString(line) {
+				if sp.pattern.MatchString(line) {
 					return model.CheckResult{
 						ID: c.ID(), Category: c.Category(), Name: c.Name(),
 						Status: model.StatusNone, Points: 0, MaxPoints: c.MaxPoints(),
-						Details:    sp.label,
+						Details:    sp.name + " detected",
 						Suggestion: "Remove secrets from source code and use environment variables",
 					}
 				}

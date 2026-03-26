@@ -1,0 +1,62 @@
+name: 'RepoHealth Check'
+description: 'Analyze repository health and produce a score'
+branding:
+  icon: 'activity'
+  color: 'green'
+
+inputs:
+  threshold:
+    description: 'Minimum passing score (0-100)'
+    required: false
+    default: '0'
+  format:
+    description: 'Output format: terminal, json, markdown, html'
+    required: false
+    default: 'terminal'
+  version:
+    description: 'RepoHealth version to install'
+    required: false
+    default: 'latest'
+
+outputs:
+  score:
+    description: 'Health score (0-100)'
+    value: ${{ steps.run.outputs.score }}
+  grade:
+    description: 'Letter grade (A+ to F)'
+    value: ${{ steps.run.outputs.grade }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.22'
+
+    - name: Install RepoHealth
+      shell: bash
+      run: go install github.com/spbuilds/repohealth/cmd/repohealth@${{ inputs.version }}
+
+    - name: Run RepoHealth
+      id: run
+      shell: bash
+      run: |
+        OUTPUT=$(repohealth . --score-only)
+        echo "score=$(echo $OUTPUT | cut -d'/' -f1)" >> $GITHUB_OUTPUT
+        echo "grade=$(echo $OUTPUT | grep -o '([^)]*)' | tr -d '()')" >> $GITHUB_OUTPUT
+
+        if [ "${{ inputs.format }}" != "terminal" ]; then
+          repohealth . --format ${{ inputs.format }}
+        else
+          repohealth .
+        fi
+
+        THRESHOLD=${{ inputs.threshold }}
+        if [ "$THRESHOLD" -gt "0" ]; then
+          SCORE=$(echo $OUTPUT | cut -d'/' -f1)
+          if [ "$SCORE" -lt "$THRESHOLD" ]; then
+            echo "::error::RepoHealth score $SCORE is below threshold $THRESHOLD"
+            exit 2
+          fi
+        fi

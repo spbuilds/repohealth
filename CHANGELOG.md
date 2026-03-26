@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.4.0] - 2026-03-26
+
+### Added
+- GitHub Action composite (`action.yml`) for easy CI integration
+- Improved CI detection: now detects vitest, pnpm, yarn, turbo, nx, bun, and many more
+- Improved secret scanning: AWS keys, GitHub tokens, Slack tokens, Stripe keys, Google API keys, private key blocks, generic password/secret patterns
+- README quality scoring: checks for section headings (install, usage, examples) not just file size
+- Report output tests for Markdown, HTML, and JSON
+- Version fallback via `debug.ReadBuildInfo` for `go install` users
+- Build metadata: commit hash and date embedded in release binaries
+- Performance guardrail: scanner stops at 100,000 files
+
+### Fixed
+- `repohealth --version` now shows correct version when installed via `go install`
+- CI parsing no longer misses vitest, pnpm test, turbo test, and other modern tooling
+- Deterministic output ordering for checks and suggestions
+
+### Changed
+- GoReleaser config now includes commit hash and build date in ldflags
+
 ## [0.1.1] - 2026-03-26
 
 ### Added
