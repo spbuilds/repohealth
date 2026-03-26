@@ -1,0 +1,12 @@
+linters:
+  enable:
+    - errcheck
+    - govet
+    - staticcheck
+    - unused
+    - gofmt
+    - ineffassign
+
+issues:
+  exclude-dirs:
+    - testdata
