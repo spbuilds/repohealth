@@ -1,6 +1,8 @@
 package checks
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/spbuilds/repohealth/internal/model"
@@ -187,5 +189,74 @@ func TestBranchProtectionCheck_None(t *testing.T) {
 	}
 	if result.Suggestion == "" {
 		t.Error("expected a suggestion for missing branch protection")
+	}
+}
+
+func TestNoSecretsCheck_CleanRepo(t *testing.T) {
+	ctx := &model.ScanContext{
+		RepoPath: t.TempDir(),
+		Files: []model.FileInfo{
+			{Path: "main.go", Name: "main.go", Size: 50},
+		},
+	}
+	// Create a clean source file in temp dir
+	os.WriteFile(filepath.Join(ctx.RepoPath, "main.go"), []byte("package main\nfunc main() {}\n"), 0644)
+
+	check := &NoSecretsCheck{}
+	result := check.Run(ctx)
+	if result.Status != model.StatusFull {
+		t.Errorf("Status = %v, want Full for clean repo", result.Status)
+	}
+}
+
+func TestNoSecretsCheck_EnvFile(t *testing.T) {
+	ctx := &model.ScanContext{
+		Files: []model.FileInfo{
+			{Path: ".env", Name: ".env", Size: 20},
+		},
+	}
+	check := &NoSecretsCheck{}
+	result := check.Run(ctx)
+	if result.Status != model.StatusNone {
+		t.Errorf("Status = %v, want None for .env file", result.Status)
+	}
+}
+
+func TestNoSecretsCheck_EnvLocal(t *testing.T) {
+	ctx := &model.ScanContext{
+		Files: []model.FileInfo{
+			{Path: ".env.local", Name: ".env.local", Size: 20},
+		},
+	}
+	check := &NoSecretsCheck{}
+	result := check.Run(ctx)
+	if result.Status != model.StatusNone {
+		t.Errorf("Status = %v, want None for .env.local", result.Status)
+	}
+}
+
+func TestNoSecretsCheck_EnvExampleAllowed(t *testing.T) {
+	ctx := &model.ScanContext{
+		Files: []model.FileInfo{
+			{Path: ".env.example", Name: ".env.example", Size: 20},
+		},
+	}
+	check := &NoSecretsCheck{}
+	result := check.Run(ctx)
+	if result.Status != model.StatusFull {
+		t.Errorf("Status = %v, want Full for .env.example (allowed)", result.Status)
+	}
+}
+
+func TestBranchProtectionCheck_CODEOWNERS(t *testing.T) {
+	ctx := &model.ScanContext{
+		Files: []model.FileInfo{
+			{Path: "CODEOWNERS", Name: "CODEOWNERS", Size: 50},
+		},
+	}
+	check := &BranchProtectionCheck{}
+	result := check.Run(ctx)
+	if result.Status != model.StatusFull {
+		t.Errorf("Status = %v, want Full for CODEOWNERS", result.Status)
 	}
 }

@@ -171,3 +171,45 @@ func TestDependencyCountCheck_Full_PackageJSON(t *testing.T) {
 		t.Errorf("Status = %v, want Full (3 deps < 50)", result.Status)
 	}
 }
+
+func TestLockfileExistsCheck_GoSum(t *testing.T) {
+	ctx := &model.ScanContext{
+		Files: []model.FileInfo{{Path: "go.sum", Name: "go.sum", Size: 1000}},
+	}
+	check := &LockfileExistsCheck{}
+	result := check.Run(ctx)
+	if result.Status != model.StatusFull {
+		t.Errorf("Status = %v, want Full", result.Status)
+	}
+}
+
+func TestLockfileExistsCheck_NoFiles(t *testing.T) {
+	ctx := &model.ScanContext{}
+	check := &LockfileExistsCheck{}
+	result := check.Run(ctx)
+	if result.Status != model.StatusNone {
+		t.Errorf("Status = %v, want None", result.Status)
+	}
+}
+
+func TestPackageManagerCheck_GoMod(t *testing.T) {
+	ctx := &model.ScanContext{
+		Files: []model.FileInfo{{Path: "go.mod", Name: "go.mod", Size: 200}},
+	}
+	check := &PackageManagerCheck{}
+	result := check.Run(ctx)
+	if result.Status != model.StatusFull {
+		t.Errorf("Status = %v, want Full for go.mod", result.Status)
+	}
+}
+
+func TestPackageManagerCheck_PackageJSON(t *testing.T) {
+	ctx := &model.ScanContext{
+		Files: []model.FileInfo{{Path: "package.json", Name: "package.json", Size: 500}},
+	}
+	check := &PackageManagerCheck{}
+	result := check.Run(ctx)
+	if result.Status != model.StatusFull {
+		t.Errorf("Status = %v, want Full for package.json", result.Status)
+	}
+}

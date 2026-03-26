@@ -213,3 +213,69 @@ func TestRecommendations(t *testing.T) {
 		t.Errorf("second suggestion impact = %d, want 2", suggestions[1].Impact)
 	}
 }
+
+func TestScoreCategoryNeverExceedsMax(t *testing.T) {
+	// Edge case: after redistribution, catScore should never exceed effectiveMax
+	results := []model.CheckResult{
+		{ID: "DOC-01", Category: "docs", Status: model.StatusFull, Points: 3, MaxPoints: 3},
+		{ID: "DOC-02", Category: "docs", Status: model.StatusSkipped, Points: 0, MaxPoints: 1},
+	}
+	r := Score(results, "/tmp/test", nil, 10, time.Now())
+	for _, cat := range r.Categories {
+		if cat.Score > cat.MaxScore {
+			t.Errorf("Category %s: score %d exceeds max %d", cat.Name, cat.Score, cat.MaxScore)
+		}
+	}
+}
+
+func TestScoreFullMarks(t *testing.T) {
+	results := []model.CheckResult{
+		{ID: "DOC-01", Category: "docs", Status: model.StatusFull, Points: 15, MaxPoints: 15},
+		{ID: "TST-01", Category: "tests", Status: model.StatusFull, Points: 20, MaxPoints: 20},
+	}
+	r := Score(results, "/tmp/test", nil, 10, time.Now())
+	if r.Score != 100 {
+		t.Errorf("Score = %d, want 100 for all full marks", r.Score)
+	}
+	if r.Grade != "A+" {
+		t.Errorf("Grade = %q, want A+", r.Grade)
+	}
+}
+
+func TestScoreRawMaxSet(t *testing.T) {
+	results := []model.CheckResult{
+		{ID: "DOC-01", Category: "docs", Status: model.StatusFull, Points: 4, MaxPoints: 4},
+		{ID: "TST-01", Category: "tests", Status: model.StatusNone, Points: 0, MaxPoints: 8},
+	}
+	r := Score(results, "/tmp/test", nil, 10, time.Now())
+	if r.RawMax != 12 {
+		t.Errorf("RawMax = %d, want 12", r.RawMax)
+	}
+}
+
+func TestScoreSchemaVersion(t *testing.T) {
+	r := Score(nil, "/tmp/test", nil, 0, time.Now())
+	if r.SchemaVersion != "1.0" {
+		t.Errorf("SchemaVersion = %q, want 1.0", r.SchemaVersion)
+	}
+}
+
+func TestGradeBoundaries(t *testing.T) {
+	tests := []struct {
+		score int
+		want  string
+	}{
+		{100, "A+"}, {95, "A+"}, {94, "A"}, {90, "A"},
+		{89, "A-"}, {85, "A-"}, {84, "B+"}, {80, "B+"},
+		{79, "B"}, {75, "B"}, {74, "B-"}, {70, "B-"},
+		{69, "C+"}, {65, "C+"}, {64, "C"}, {60, "C"},
+		{59, "C-"}, {55, "C-"}, {54, "D"}, {40, "D"},
+		{39, "F"}, {0, "F"},
+	}
+	for _, tt := range tests {
+		got := Grade(tt.score)
+		if got != tt.want {
+			t.Errorf("Grade(%d) = %q, want %q", tt.score, got, tt.want)
+		}
+	}
+}

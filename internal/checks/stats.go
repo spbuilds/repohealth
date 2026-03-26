@@ -25,10 +25,23 @@ var nonCodeLanguages = map[string]bool{
 // isTestFile returns true if the file name indicates a test file.
 func isTestFile(name string) bool {
 	lower := strings.ToLower(name)
-	return strings.Contains(lower, "_test") ||
-		strings.Contains(lower, "test_") ||
-		strings.Contains(lower, ".test.") ||
-		strings.Contains(lower, ".spec.")
+	// Go: *_test.go, Rust: *_test.rs, Ruby: *_test.rb
+	if strings.HasSuffix(lower, "_test.go") || strings.HasSuffix(lower, "_test.rs") || strings.HasSuffix(lower, "_test.rb") {
+		return true
+	}
+	// Python: test_*.py (prefix only)
+	if strings.HasPrefix(lower, "test_") && strings.HasSuffix(lower, ".py") {
+		return true
+	}
+	// JS/TS: *.test.* or *.spec.*
+	if strings.Contains(lower, ".test.") || strings.Contains(lower, ".spec.") {
+		return true
+	}
+	// Java: *Test.java or *Tests.java
+	if strings.HasSuffix(lower, "test.java") || strings.HasSuffix(lower, "tests.java") {
+		return true
+	}
+	return false
 }
 
 // isSourceFile returns true if the file is a non-test source code file.
