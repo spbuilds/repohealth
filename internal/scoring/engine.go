@@ -12,7 +12,11 @@ var categoryLabels = map[string]string{
 	"docs":     "Documentation",
 	"tests":    "Testing",
 	"cicd":     "CI/CD",
+	"deps":     "Dependencies",
+	"security": "Security",
+	"stats":    "Code Statistics",
 	"activity": "Activity",
+	"todo":     "TODO / Technical Debt",
 }
 
 // Score aggregates check results into a complete report.
@@ -38,7 +42,7 @@ func Score(results []model.CheckResult, repoPath string, languages map[string]in
 	totalMax := 0
 
 	// Process categories in display order
-	catOrder := []string{"docs", "tests", "cicd", "activity"}
+	catOrder := []string{"docs", "tests", "cicd", "deps", "security", "stats", "activity", "todo"}
 
 	for _, cat := range catOrder {
 		checks, ok := catResults[cat]

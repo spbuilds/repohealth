@@ -1,0 +1,228 @@
+package checks
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/spbuilds/repohealth/internal/model"
+	"github.com/spbuilds/repohealth/internal/scanner"
+)
+
+var sourceExtensions = map[string]bool{
+	".go": true, ".py": true, ".js": true, ".ts": true,
+	".java": true, ".rs": true, ".rb": true, ".c": true,
+	".cpp": true, ".h": true, ".sh": true, ".php": true,
+	".swift": true, ".kt": true,
+}
+
+var nonCodeLanguages = map[string]bool{
+	"Markdown": true, "YAML": true, "JSON": true, "TOML": true,
+}
+
+// isTestFile returns true if the file name indicates a test file.
+func isTestFile(name string) bool {
+	lower := strings.ToLower(name)
+	return strings.Contains(lower, "_test") ||
+		strings.Contains(lower, "test_") ||
+		strings.Contains(lower, ".test.") ||
+		strings.Contains(lower, ".spec.")
+}
+
+// isSourceFile returns true if the file is a non-test source code file.
+func isSourceFile(f model.FileInfo) bool {
+	if f.IsDir {
+		return false
+	}
+	dot := strings.LastIndex(f.Name, ".")
+	if dot < 0 {
+		return false
+	}
+	ext := strings.ToLower(f.Name[dot:])
+	return sourceExtensions[ext] && !isTestFile(f.Name)
+}
+
+// STAT-01: Source files exist
+type SourceFilesExistCheck struct{}
+
+func (c *SourceFilesExistCheck) ID() string       { return "STAT-01" }
+func (c *SourceFilesExistCheck) Category() string { return "stats" }
+func (c *SourceFilesExistCheck) Name() string     { return "Source files exist" }
+func (c *SourceFilesExistCheck) MaxPoints() int   { return 1 }
+
+func (c *SourceFilesExistCheck) Run(ctx *model.ScanContext) model.CheckResult {
+	count := 0
+	for _, f := range ctx.Files {
+		if isSourceFile(f) {
+			count++
+		}
+	}
+
+	if count > 0 {
+		return model.CheckResult{
+			ID: c.ID(), Category: c.Category(), Name: c.Name(),
+			Status: model.StatusFull, Points: c.MaxPoints(), MaxPoints: c.MaxPoints(),
+			Details: fmt.Sprintf("%d source files", count),
+		}
+	}
+	return model.CheckResult{
+		ID: c.ID(), Category: c.Category(), Name: c.Name(),
+		Status: model.StatusNone, Points: 0, MaxPoints: c.MaxPoints(),
+		Details:    "No source files found",
+		Suggestion: "Add source code files to the repository",
+	}
+}
+
+// STAT-02: Language diversity
+type LanguageDiversityCheck struct{}
+
+func (c *LanguageDiversityCheck) ID() string       { return "STAT-02" }
+func (c *LanguageDiversityCheck) Category() string { return "stats" }
+func (c *LanguageDiversityCheck) Name() string     { return "Language diversity" }
+func (c *LanguageDiversityCheck) MaxPoints() int   { return 1 }
+
+func (c *LanguageDiversityCheck) Run(ctx *model.ScanContext) model.CheckResult {
+	count := 0
+	for lang := range ctx.Languages {
+		if !nonCodeLanguages[lang] {
+			count++
+		}
+	}
+
+	if count >= 2 {
+		return model.CheckResult{
+			ID: c.ID(), Category: c.Category(), Name: c.Name(),
+			Status: model.StatusFull, Points: c.MaxPoints(), MaxPoints: c.MaxPoints(),
+			Details: fmt.Sprintf("%d languages", count),
+		}
+	}
+	if count == 1 {
+		return model.CheckResult{
+			ID: c.ID(), Category: c.Category(), Name: c.Name(),
+			Status: model.StatusPartial, Points: 0, MaxPoints: c.MaxPoints(),
+			Details:    "1 language",
+			Suggestion: "Consider diversifying the language stack",
+		}
+	}
+	return model.CheckResult{
+		ID: c.ID(), Category: c.Category(), Name: c.Name(),
+		Status: model.StatusNone, Points: 0, MaxPoints: c.MaxPoints(),
+		Details:    "No languages detected",
+		Suggestion: "Add source code files to the repository",
+	}
+}
+
+// STAT-03: Comment ratio
+type CommentRatioCheck struct{}
+
+func (c *CommentRatioCheck) ID() string       { return "STAT-03" }
+func (c *CommentRatioCheck) Category() string { return "stats" }
+func (c *CommentRatioCheck) Name() string     { return "Comment ratio" }
+func (c *CommentRatioCheck) MaxPoints() int   { return 2 }
+
+func (c *CommentRatioCheck) Run(ctx *model.ScanContext) model.CheckResult {
+	var sampled []model.FileInfo
+	for _, f := range ctx.Files {
+		if isSourceFile(f) {
+			sampled = append(sampled, f)
+			if len(sampled) >= 50 {
+				break
+			}
+		}
+	}
+
+	if len(sampled) == 0 {
+		return model.CheckResult{
+			ID: c.ID(), Category: c.Category(), Name: c.Name(),
+			Status: model.StatusSkipped, Points: 0, MaxPoints: c.MaxPoints(),
+			Details: "No source files to sample",
+		}
+	}
+
+	totalLines := 0
+	commentLines := 0
+	for _, f := range sampled {
+		lines, err := scanner.ReadFileLines(ctx.RepoPath, f.Path)
+		if err != nil || lines == nil {
+			continue
+		}
+		for _, line := range lines {
+			trimmed := strings.TrimSpace(line)
+			totalLines++
+			if strings.HasPrefix(trimmed, "//") ||
+				strings.HasPrefix(trimmed, "#") ||
+				strings.HasPrefix(trimmed, "--") ||
+				strings.HasPrefix(trimmed, "/*") ||
+				strings.HasPrefix(trimmed, "* ") ||
+				trimmed == "*" {
+				commentLines++
+			}
+		}
+	}
+
+	if totalLines == 0 {
+		return model.CheckResult{
+			ID: c.ID(), Category: c.Category(), Name: c.Name(),
+			Status: model.StatusSkipped, Points: 0, MaxPoints: c.MaxPoints(),
+			Details: "No readable lines found",
+		}
+	}
+
+	ratio := float64(commentLines) / float64(totalLines)
+	pct := int(ratio * 100)
+
+	if ratio > 0.10 {
+		return model.CheckResult{
+			ID: c.ID(), Category: c.Category(), Name: c.Name(),
+			Status: model.StatusFull, Points: c.MaxPoints(), MaxPoints: c.MaxPoints(),
+			Details: fmt.Sprintf("%d%% comment ratio", pct),
+		}
+	}
+	if ratio >= 0.05 {
+		return model.CheckResult{
+			ID: c.ID(), Category: c.Category(), Name: c.Name(),
+			Status: model.StatusPartial, Points: 1, MaxPoints: c.MaxPoints(),
+			Details:    fmt.Sprintf("%d%% comment ratio", pct),
+			Suggestion: "Increase inline documentation (target >10% comment ratio)",
+		}
+	}
+	return model.CheckResult{
+		ID: c.ID(), Category: c.Category(), Name: c.Name(),
+		Status: model.StatusNone, Points: 0, MaxPoints: c.MaxPoints(),
+		Details:    fmt.Sprintf("%d%% comment ratio", pct),
+		Suggestion: "Add comments to explain non-obvious code (currently <5%)",
+	}
+}
+
+// STAT-04: No vendor bloat
+type NoVendorBloatCheck struct{}
+
+func (c *NoVendorBloatCheck) ID() string       { return "STAT-04" }
+func (c *NoVendorBloatCheck) Category() string { return "stats" }
+func (c *NoVendorBloatCheck) Name() string     { return "No vendor bloat" }
+func (c *NoVendorBloatCheck) MaxPoints() int   { return 1 }
+
+func (c *NoVendorBloatCheck) Run(ctx *model.ScanContext) model.CheckResult {
+	for _, f := range ctx.Files {
+		if strings.HasPrefix(f.Path, "vendor/") {
+			return model.CheckResult{
+				ID: c.ID(), Category: c.Category(), Name: c.Name(),
+				Status: model.StatusNone, Points: 0, MaxPoints: c.MaxPoints(),
+				Details:    "vendor/ directory found",
+				Suggestion: "Consider removing the vendor directory and using a package manager",
+			}
+		}
+		if strings.HasPrefix(f.Path, "node_modules/") {
+			return model.CheckResult{
+				ID: c.ID(), Category: c.Category(), Name: c.Name(),
+				Status: model.StatusNone, Points: 0, MaxPoints: c.MaxPoints(),
+				Details:    "node_modules/ found in repository",
+				Suggestion: "Add node_modules/ to .gitignore",
+			}
+		}
+	}
+	return model.CheckResult{
+		ID: c.ID(), Category: c.Category(), Name: c.Name(),
+		Status: model.StatusFull, Points: c.MaxPoints(), MaxPoints: c.MaxPoints(),
+		Details: "No vendor bloat detected",
+	}
+}

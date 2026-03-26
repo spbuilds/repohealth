@@ -120,6 +120,153 @@ func (c *ContributorCountCheck) Run(ctx *model.ScanContext) model.CheckResult {
 	}
 }
 
+// ACT-02: Commit frequency
+type CommitFrequencyCheck struct{}
+
+func (c *CommitFrequencyCheck) ID() string       { return "ACT-02" }
+func (c *CommitFrequencyCheck) Category() string { return "activity" }
+func (c *CommitFrequencyCheck) Name() string     { return "Commit frequency" }
+func (c *CommitFrequencyCheck) MaxPoints() int   { return 3 }
+
+func (c *CommitFrequencyCheck) Run(ctx *model.ScanContext) model.CheckResult {
+	if !ctx.GitAvailable {
+		return model.CheckResult{
+			ID: c.ID(), Category: c.Category(), Name: c.Name(),
+			Status: model.StatusSkipped, Points: 0, MaxPoints: c.MaxPoints(),
+			Details: "Git not available",
+		}
+	}
+
+	count, err := scanner.CommitCountSince(ctx.RepoPath, 6)
+	if err != nil {
+		return model.CheckResult{
+			ID: c.ID(), Category: c.Category(), Name: c.Name(),
+			Status: model.StatusSkipped, Points: 0, MaxPoints: c.MaxPoints(),
+			Details: "Could not count commits",
+		}
+	}
+
+	if count > 50 {
+		return model.CheckResult{
+			ID: c.ID(), Category: c.Category(), Name: c.Name(),
+			Status: model.StatusFull, Points: c.MaxPoints(), MaxPoints: c.MaxPoints(),
+			Details: fmt.Sprintf("%d commits in last 6 months", count),
+		}
+	}
+	if count >= 10 {
+		return model.CheckResult{
+			ID: c.ID(), Category: c.Category(), Name: c.Name(),
+			Status: model.StatusPartial, Points: 1, MaxPoints: c.MaxPoints(),
+			Details:    fmt.Sprintf("%d commits in last 6 months", count),
+			Suggestion: "Increase commit frequency to show active development",
+		}
+	}
+	return model.CheckResult{
+		ID: c.ID(), Category: c.Category(), Name: c.Name(),
+		Status: model.StatusNone, Points: 0, MaxPoints: c.MaxPoints(),
+		Details:    fmt.Sprintf("%d commits in last 6 months", count),
+		Suggestion: "Repository has very few recent commits",
+	}
+}
+
+// ACT-04: Release exists
+type ReleaseExistsCheck struct{}
+
+func (c *ReleaseExistsCheck) ID() string       { return "ACT-04" }
+func (c *ReleaseExistsCheck) Category() string { return "activity" }
+func (c *ReleaseExistsCheck) Name() string     { return "Release exists" }
+func (c *ReleaseExistsCheck) MaxPoints() int   { return 2 }
+
+func (c *ReleaseExistsCheck) Run(ctx *model.ScanContext) model.CheckResult {
+	if !ctx.GitAvailable {
+		return model.CheckResult{
+			ID: c.ID(), Category: c.Category(), Name: c.Name(),
+			Status: model.StatusSkipped, Points: 0, MaxPoints: c.MaxPoints(),
+			Details: "Git not available",
+		}
+	}
+
+	count, err := scanner.TagCount(ctx.RepoPath)
+	if err != nil {
+		return model.CheckResult{
+			ID: c.ID(), Category: c.Category(), Name: c.Name(),
+			Status: model.StatusSkipped, Points: 0, MaxPoints: c.MaxPoints(),
+			Details: "Could not read git tags",
+		}
+	}
+
+	if count > 0 {
+		return model.CheckResult{
+			ID: c.ID(), Category: c.Category(), Name: c.Name(),
+			Status: model.StatusFull, Points: c.MaxPoints(), MaxPoints: c.MaxPoints(),
+			Details: fmt.Sprintf("%d release tags", count),
+		}
+	}
+	return model.CheckResult{
+		ID: c.ID(), Category: c.Category(), Name: c.Name(),
+		Status: model.StatusNone, Points: 0, MaxPoints: c.MaxPoints(),
+		Details:    "No release tags found",
+		Suggestion: "Tag releases to make versioning visible (e.g. v1.0.0)",
+	}
+}
+
+// ACT-05: Bus factor
+type BusFactorCheck struct{}
+
+func (c *BusFactorCheck) ID() string       { return "ACT-05" }
+func (c *BusFactorCheck) Category() string { return "activity" }
+func (c *BusFactorCheck) Name() string     { return "Bus factor" }
+func (c *BusFactorCheck) MaxPoints() int   { return 2 }
+
+func (c *BusFactorCheck) Run(ctx *model.ScanContext) model.CheckResult {
+	if !ctx.GitAvailable {
+		return model.CheckResult{
+			ID: c.ID(), Category: c.Category(), Name: c.Name(),
+			Status: model.StatusSkipped, Points: 0, MaxPoints: c.MaxPoints(),
+			Details: "Git not available",
+		}
+	}
+
+	factor, err := scanner.BusFactor(ctx.RepoPath)
+	if err != nil {
+		return model.CheckResult{
+			ID: c.ID(), Category: c.Category(), Name: c.Name(),
+			Status: model.StatusSkipped, Points: 0, MaxPoints: c.MaxPoints(),
+			Details: "Could not compute bus factor",
+		}
+	}
+
+	if factor == 0 {
+		return model.CheckResult{
+			ID: c.ID(), Category: c.Category(), Name: c.Name(),
+			Status: model.StatusSkipped, Points: 0, MaxPoints: c.MaxPoints(),
+			Details: "No commits found",
+		}
+	}
+
+	if factor >= 3 {
+		return model.CheckResult{
+			ID: c.ID(), Category: c.Category(), Name: c.Name(),
+			Status: model.StatusFull, Points: c.MaxPoints(), MaxPoints: c.MaxPoints(),
+			Details: fmt.Sprintf("bus factor %d", factor),
+		}
+	}
+	if factor == 2 {
+		return model.CheckResult{
+			ID: c.ID(), Category: c.Category(), Name: c.Name(),
+			Status: model.StatusPartial, Points: 1, MaxPoints: c.MaxPoints(),
+			Details:    fmt.Sprintf("bus factor %d", factor),
+			Suggestion: "Spread knowledge across more contributors",
+		}
+	}
+	return model.CheckResult{
+		ID: c.ID(), Category: c.Category(), Name: c.Name(),
+		Status: model.StatusNone, Points: 0, MaxPoints: c.MaxPoints(),
+		Details:    "bus factor 1",
+		Suggestion: "Only 1 contributor holds >10% of commits — high bus factor risk",
+	}
+}
+
 func daysAgoText(days int) string {
 	if days == 0 {
 		return "today"

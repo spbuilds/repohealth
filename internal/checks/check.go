@@ -31,22 +31,61 @@ func NewRegistry() *Registry {
 		&ChangelogExistsCheck{},
 	)
 
-	// Testing checks (TST-01 to TST-03)
+	// Testing checks (TST-01 to TST-05)
 	r.checks = append(r.checks,
 		&TestFilesExistCheck{},
 		&TestDirExistsCheck{},
 		&TestFrameworkCheck{},
+		&CoverageConfigCheck{},
+		&TestToSourceRatioCheck{},
 	)
 
-	// CI/CD checks (CI-01)
+	// CI/CD checks (CI-01 to CI-04)
 	r.checks = append(r.checks,
 		&CIConfigExistsCheck{},
+		&CIRunsTestsCheck{},
+		&CIRunsLinterCheck{},
+		&CIRunsBuildCheck{},
 	)
 
-	// Activity checks (ACT-01, ACT-03)
+	// Dependency checks (DEP-01 to DEP-05)
+	r.checks = append(r.checks,
+		&LockfileExistsCheck{},
+		&PackageManagerCheck{},
+		&LockfileFreshnessCheck{},
+		&DependencyCountCheck{},
+	)
+
+	// Security checks (SEC-02 to SEC-05)
+	r.checks = append(r.checks,
+		&NoSecretsCheck{},
+		&GitignoreSecretsCheck{},
+		&DependencyPinningCheck{},
+		&BranchProtectionCheck{},
+	)
+
+	// Code statistics (STAT-01 to STAT-04)
+	r.checks = append(r.checks,
+		&SourceFilesExistCheck{},
+		&LanguageDiversityCheck{},
+		&CommentRatioCheck{},
+		&NoVendorBloatCheck{},
+	)
+
+	// Activity checks (ACT-01 to ACT-05)
 	r.checks = append(r.checks,
 		&RecentCommitCheck{},
+		&CommitFrequencyCheck{},
 		&ContributorCountCheck{},
+		&ReleaseExistsCheck{},
+		&BusFactorCheck{},
+	)
+
+	// TODO / Technical Debt (TODO-01 to TODO-03)
+	r.checks = append(r.checks,
+		&TodoCountCheck{},
+		&TodoDensityCheck{},
+		&TodoCriticalCheck{},
 	)
 
 	return r

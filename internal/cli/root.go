@@ -19,19 +19,23 @@ var Version = "dev"
 var noColor bool
 var format string
 var scoreOnly bool
+var ciMode bool
+var threshold int
 
 var rootCmd = &cobra.Command{
 	Use:   "repohealth [path]",
 	Short: "Analyze repository health and produce a unified score",
-	Long:  "RepoHealth is a deterministic CLI tool that analyzes repository health across documentation, tests, CI/CD, and activity — producing a unified score (0-100) with actionable recommendations.",
+	Long:  "RepoHealth is a deterministic CLI tool that analyzes repository health across documentation, tests, CI/CD, dependencies, security, activity, and code statistics — producing a unified score (0-100) with actionable recommendations.",
 	Args:  cobra.MaximumNArgs(1),
 	RunE:  run,
 }
 
 func init() {
 	rootCmd.Flags().BoolVar(&noColor, "no-color", false, "Disable colored output")
-	rootCmd.Flags().StringVarP(&format, "format", "f", "terminal", "Output format: terminal, json")
+	rootCmd.Flags().StringVarP(&format, "format", "f", "terminal", "Output format: terminal, json, markdown")
 	rootCmd.Flags().BoolVarP(&scoreOnly, "score-only", "s", false, "Output only the score")
+	rootCmd.Flags().BoolVar(&ciMode, "ci", false, "CI mode: exit with code 2 if score below threshold")
+	rootCmd.Flags().IntVarP(&threshold, "threshold", "t", 70, "Minimum passing score (used with --ci)")
 	rootCmd.Version = Version
 }
 
@@ -79,16 +83,27 @@ func run(cmd *cobra.Command, args []string) error {
 
 	if scoreOnly {
 		fmt.Fprintf(os.Stdout, "%d/%d (%s)\n", r.Score, r.MaxScore, r.Grade)
+		if ciMode && r.Score < threshold {
+			os.Exit(2)
+		}
 		return nil
 	}
 
 	switch format {
 	case "json":
-		return report.JSON(os.Stdout, r)
+		if err := report.JSON(os.Stdout, r); err != nil {
+			return err
+		}
+	case "markdown":
+		report.Markdown(os.Stdout, r)
 	case "terminal":
 		report.Terminal(os.Stdout, r, Version)
 	default:
 		return fmt.Errorf("unknown format: %s", format)
+	}
+
+	if ciMode && r.Score < threshold {
+		os.Exit(2)
 	}
 
 	return nil

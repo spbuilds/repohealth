@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/spbuilds/repohealth/internal/model"
+	"github.com/spbuilds/repohealth/internal/scanner"
 )
 
 // TST-01: Test files exist
@@ -135,5 +136,114 @@ func (c *TestFrameworkCheck) Run(ctx *model.ScanContext) model.CheckResult {
 		Status: model.StatusNone, Points: 0, MaxPoints: c.MaxPoints(),
 		Details:    "No test framework configuration found",
 		Suggestion: "Configure a test framework for your project",
+	}
+}
+
+// TST-04: Coverage config exists
+type CoverageConfigCheck struct{}
+
+func (c *CoverageConfigCheck) ID() string       { return "TST-04" }
+func (c *CoverageConfigCheck) Category() string { return "tests" }
+func (c *CoverageConfigCheck) Name() string     { return "Coverage config exists" }
+func (c *CoverageConfigCheck) MaxPoints() int   { return 3 }
+
+func (c *CoverageConfigCheck) Run(ctx *model.ScanContext) model.CheckResult {
+	coverageFiles := []string{
+		".nycrc", ".nycrc.json", ".coveragerc",
+		"coverage.xml", "codecov.yml", ".coveralls.yml",
+	}
+
+	for _, f := range coverageFiles {
+		if _, ok := ctx.HasFile(f); ok {
+			return model.CheckResult{
+				ID: c.ID(), Category: c.Category(), Name: c.Name(),
+				Status: model.StatusFull, Points: c.MaxPoints(), MaxPoints: c.MaxPoints(),
+				Details: f,
+			}
+		}
+	}
+
+	// Check package.json for "coverage" script
+	if path, ok := ctx.HasFile("package.json"); ok {
+		lines, err := scanner.ReadFileLines(ctx.RepoPath, path)
+		if err == nil {
+			for _, line := range lines {
+				if strings.Contains(line, `"coverage"`) {
+					return model.CheckResult{
+						ID: c.ID(), Category: c.Category(), Name: c.Name(),
+						Status: model.StatusFull, Points: c.MaxPoints(), MaxPoints: c.MaxPoints(),
+						Details: "package.json coverage script",
+					}
+				}
+			}
+		}
+	}
+
+	return model.CheckResult{
+		ID: c.ID(), Category: c.Category(), Name: c.Name(),
+		Status: model.StatusNone, Points: 0, MaxPoints: c.MaxPoints(),
+		Details:    "No coverage configuration found",
+		Suggestion: "Add coverage configuration (e.g. codecov.yml or .nycrc)",
+	}
+}
+
+// TST-05: Test-to-source ratio
+type TestToSourceRatioCheck struct{}
+
+func (c *TestToSourceRatioCheck) ID() string       { return "TST-05" }
+func (c *TestToSourceRatioCheck) Category() string { return "tests" }
+func (c *TestToSourceRatioCheck) Name() string     { return "Test-to-source ratio" }
+func (c *TestToSourceRatioCheck) MaxPoints() int   { return 3 }
+
+func (c *TestToSourceRatioCheck) Run(ctx *model.ScanContext) model.CheckResult {
+	testPatterns := []string{
+		"*_test.go",
+		"*_test.py", "test_*.py",
+		"*.test.ts", "*.test.js", "*.test.tsx", "*.test.jsx",
+		"*.spec.ts", "*.spec.js", "*.spec.tsx", "*.spec.jsx",
+		"*_test.rs",
+		"*_test.rb",
+		"*Test.java", "*Tests.java",
+	}
+
+	testCount := ctx.CountFilesMatching(testPatterns...)
+
+	sourceCount := 0
+	for _, f := range ctx.Files {
+		if isSourceFile(f) {
+			sourceCount++
+		}
+	}
+
+	if sourceCount == 0 {
+		return model.CheckResult{
+			ID: c.ID(), Category: c.Category(), Name: c.Name(),
+			Status: model.StatusSkipped, Points: 0, MaxPoints: c.MaxPoints(),
+			Details: "No source files found",
+		}
+	}
+
+	ratio := float64(testCount) / float64(sourceCount)
+
+	if ratio > 0.3 {
+		return model.CheckResult{
+			ID: c.ID(), Category: c.Category(), Name: c.Name(),
+			Status: model.StatusFull, Points: c.MaxPoints(), MaxPoints: c.MaxPoints(),
+			Details: fmt.Sprintf("%d test files / %d source files (%.0f%%)", testCount, sourceCount, ratio*100),
+		}
+	}
+	if ratio >= 0.1 {
+		return model.CheckResult{
+			ID: c.ID(), Category: c.Category(), Name: c.Name(),
+			Status: model.StatusPartial, Points: 1, MaxPoints: c.MaxPoints(),
+			Details:    fmt.Sprintf("%d test files / %d source files (%.0f%%)", testCount, sourceCount, ratio*100),
+			Suggestion: "Increase test coverage (target >30% test-to-source ratio)",
+		}
+	}
+	return model.CheckResult{
+		ID: c.ID(), Category: c.Category(), Name: c.Name(),
+		Status: model.StatusNone, Points: 0, MaxPoints: c.MaxPoints(),
+		Details:    fmt.Sprintf("%d test files / %d source files (%.0f%%)", testCount, sourceCount, ratio*100),
+		Suggestion: "Add more test files to improve test coverage",
 	}
 }

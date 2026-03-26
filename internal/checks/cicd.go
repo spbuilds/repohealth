@@ -1,6 +1,11 @@
 package checks
 
-import "github.com/spbuilds/repohealth/internal/model"
+import (
+	"strings"
+
+	"github.com/spbuilds/repohealth/internal/model"
+	"github.com/spbuilds/repohealth/internal/scanner"
+)
 
 // CI-01: CI configuration exists
 type CIConfigExistsCheck struct{}
@@ -51,5 +56,168 @@ func (c *CIConfigExistsCheck) Run(ctx *model.ScanContext) model.CheckResult {
 		Status: model.StatusNone, Points: 0, MaxPoints: c.MaxPoints(),
 		Details:    "No CI/CD configuration found",
 		Suggestion: "Add CI/CD configuration (GitHub Actions recommended)",
+	}
+}
+
+// readCIConfigs collects all lines from all CI config files found in ctx.
+func readCIConfigs(ctx *model.ScanContext) []string {
+	var allLines []string
+	for _, f := range ctx.Files {
+		if strings.HasPrefix(f.Path, ".github/workflows/") && strings.HasSuffix(f.Name, ".yml") {
+			lines, _ := scanner.ReadFileLines(ctx.RepoPath, f.Path)
+			allLines = append(allLines, lines...)
+		}
+	}
+	for _, ciFile := range []string{".gitlab-ci.yml", ".travis.yml", "Jenkinsfile"} {
+		if _, ok := ctx.HasFile(ciFile); ok {
+			lines, _ := scanner.ReadFileLines(ctx.RepoPath, ciFile)
+			allLines = append(allLines, lines...)
+		}
+	}
+	return allLines
+}
+
+// hasCIConfig returns true if the context contains any CI configuration.
+func hasCIConfig(ctx *model.ScanContext) bool {
+	ciDirs := []string{".github/workflows", ".circleci", ".buildkite"}
+	for _, d := range ciDirs {
+		if _, ok := ctx.HasDir(d); ok {
+			return true
+		}
+	}
+	ciFiles := []string{".gitlab-ci.yml", "Jenkinsfile", ".travis.yml",
+		"bitbucket-pipelines.yml", "azure-pipelines.yml", "Taskfile.yml"}
+	for _, f := range ciFiles {
+		if _, ok := ctx.HasFile(f); ok {
+			return true
+		}
+	}
+	return false
+}
+
+// containsAny returns true if any line in lines contains any of the given substrings.
+func containsAny(lines []string, substrings []string) bool {
+	for _, line := range lines {
+		lower := strings.ToLower(line)
+		for _, s := range substrings {
+			if strings.Contains(lower, s) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// CI-02: CI runs tests
+type CIRunsTestsCheck struct{}
+
+func (c *CIRunsTestsCheck) ID() string       { return "CI-02" }
+func (c *CIRunsTestsCheck) Category() string { return "cicd" }
+func (c *CIRunsTestsCheck) Name() string     { return "CI runs tests" }
+func (c *CIRunsTestsCheck) MaxPoints() int   { return 4 }
+
+func (c *CIRunsTestsCheck) Run(ctx *model.ScanContext) model.CheckResult {
+	if !hasCIConfig(ctx) {
+		return model.CheckResult{
+			ID: c.ID(), Category: c.Category(), Name: c.Name(),
+			Status: model.StatusSkipped, Points: 0, MaxPoints: c.MaxPoints(),
+			Details: "No CI configuration found",
+		}
+	}
+
+	lines := readCIConfigs(ctx)
+	testCommands := []string{
+		"npm test", "pytest", "go test", "cargo test",
+		"mvn test", "rake test", "rspec",
+	}
+
+	if containsAny(lines, testCommands) {
+		return model.CheckResult{
+			ID: c.ID(), Category: c.Category(), Name: c.Name(),
+			Status: model.StatusFull, Points: c.MaxPoints(), MaxPoints: c.MaxPoints(),
+			Details: "Test command found in CI",
+		}
+	}
+	return model.CheckResult{
+		ID: c.ID(), Category: c.Category(), Name: c.Name(),
+		Status: model.StatusNone, Points: 0, MaxPoints: c.MaxPoints(),
+		Details:    "No test command found in CI configuration",
+		Suggestion: "Add a test step to your CI pipeline",
+	}
+}
+
+// CI-03: CI runs linter
+type CIRunsLinterCheck struct{}
+
+func (c *CIRunsLinterCheck) ID() string       { return "CI-03" }
+func (c *CIRunsLinterCheck) Category() string { return "cicd" }
+func (c *CIRunsLinterCheck) Name() string     { return "CI runs linter" }
+func (c *CIRunsLinterCheck) MaxPoints() int   { return 3 }
+
+func (c *CIRunsLinterCheck) Run(ctx *model.ScanContext) model.CheckResult {
+	if !hasCIConfig(ctx) {
+		return model.CheckResult{
+			ID: c.ID(), Category: c.Category(), Name: c.Name(),
+			Status: model.StatusSkipped, Points: 0, MaxPoints: c.MaxPoints(),
+			Details: "No CI configuration found",
+		}
+	}
+
+	lines := readCIConfigs(ctx)
+	lintCommands := []string{
+		"eslint", "ruff", "golangci-lint", "clippy",
+		"checkstyle", "pylint", "flake8", "rubocop",
+	}
+
+	if containsAny(lines, lintCommands) {
+		return model.CheckResult{
+			ID: c.ID(), Category: c.Category(), Name: c.Name(),
+			Status: model.StatusFull, Points: c.MaxPoints(), MaxPoints: c.MaxPoints(),
+			Details: "Linter found in CI",
+		}
+	}
+	return model.CheckResult{
+		ID: c.ID(), Category: c.Category(), Name: c.Name(),
+		Status: model.StatusNone, Points: 0, MaxPoints: c.MaxPoints(),
+		Details:    "No linter found in CI configuration",
+		Suggestion: "Add a lint step to your CI pipeline",
+	}
+}
+
+// CI-04: CI runs build
+type CIRunsBuildCheck struct{}
+
+func (c *CIRunsBuildCheck) ID() string       { return "CI-04" }
+func (c *CIRunsBuildCheck) Category() string { return "cicd" }
+func (c *CIRunsBuildCheck) Name() string     { return "CI runs build" }
+func (c *CIRunsBuildCheck) MaxPoints() int   { return 2 }
+
+func (c *CIRunsBuildCheck) Run(ctx *model.ScanContext) model.CheckResult {
+	if !hasCIConfig(ctx) {
+		return model.CheckResult{
+			ID: c.ID(), Category: c.Category(), Name: c.Name(),
+			Status: model.StatusSkipped, Points: 0, MaxPoints: c.MaxPoints(),
+			Details: "No CI configuration found",
+		}
+	}
+
+	lines := readCIConfigs(ctx)
+	buildCommands := []string{
+		"npm run build", "go build", "cargo build",
+		"mvn package", "gradle build", "make build",
+	}
+
+	if containsAny(lines, buildCommands) {
+		return model.CheckResult{
+			ID: c.ID(), Category: c.Category(), Name: c.Name(),
+			Status: model.StatusFull, Points: c.MaxPoints(), MaxPoints: c.MaxPoints(),
+			Details: "Build command found in CI",
+		}
+	}
+	return model.CheckResult{
+		ID: c.ID(), Category: c.Category(), Name: c.Name(),
+		Status: model.StatusNone, Points: 0, MaxPoints: c.MaxPoints(),
+		Details:    "No build command found in CI configuration",
+		Suggestion: "Add a build step to your CI pipeline",
 	}
 }
