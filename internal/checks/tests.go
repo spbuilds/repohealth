@@ -114,11 +114,19 @@ func (c *TestFrameworkCheck) Run(ctx *model.ScanContext) model.CheckResult {
 		}
 	}
 
-	if _, ok := ctx.HasFile("pyproject.toml"); ok {
-		return model.CheckResult{
-			ID: c.ID(), Category: c.Category(), Name: c.Name(),
-			Status: model.StatusFull, Points: c.MaxPoints(), MaxPoints: c.MaxPoints(),
-			Details: "pyproject.toml (pytest)",
+	if path, ok := ctx.HasFile("pyproject.toml"); ok {
+		lines, err := scanner.ReadFileLines(ctx.RepoPath, path)
+		if err == nil && lines != nil {
+			for _, line := range lines {
+				lower := strings.ToLower(strings.TrimSpace(line))
+				if strings.Contains(lower, "[tool.pytest") || strings.Contains(lower, "pytest") {
+					return model.CheckResult{
+						ID: c.ID(), Category: c.Category(), Name: c.Name(),
+						Status: model.StatusFull, Points: c.MaxPoints(), MaxPoints: c.MaxPoints(),
+						Details: "pyproject.toml (pytest)",
+					}
+				}
+			}
 		}
 	}
 

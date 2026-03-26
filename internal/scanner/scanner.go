@@ -135,7 +135,7 @@ func Scan(repoPath string, excludes []string) (*model.ScanContext, error) {
 		name := info.Name()
 
 		if info.IsDir() {
-			if skipDirs[name] || excludeSet[name] {
+			if skipDirs[name] || excludeSet[name] || excludeSet[relPath] {
 				return filepath.SkipDir
 			}
 			ctx.Dirs = append(ctx.Dirs, relPath)
@@ -158,6 +158,7 @@ func Scan(repoPath string, excludes []string) (*model.ScanContext, error) {
 		}
 		ctx.Files = append(ctx.Files, fi)
 		if len(ctx.Files) >= maxFilesToScan {
+			ctx.Truncated = true
 			return filepath.SkipAll
 		}
 

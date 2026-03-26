@@ -1,6 +1,7 @@
 package checks
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -102,18 +103,36 @@ func (c *LockfileFreshnessCheck) Run(ctx *model.ScanContext) model.CheckResult {
 		}
 	}
 
-	fullPath := filepath.Join(ctx.RepoPath, lockPath)
-	info, err := os.Stat(fullPath)
-	if err != nil {
-		return model.CheckResult{
-			ID: c.ID(), Category: c.Category(), Name: c.Name(),
-			Status: model.StatusSkipped, Points: 0, MaxPoints: c.MaxPoints(),
-			Details: "Could not stat lockfile",
+	var days int
+	if ctx.GitAvailable {
+		lastModified, gitErr := scanner.FileLastCommitDate(ctx.RepoPath, lockPath)
+		if gitErr == nil && !lastModified.IsZero() {
+			days = int(time.Since(lastModified).Hours() / 24)
+		} else {
+			// Fall back to mtime when git log produces no output
+			fullPath := filepath.Join(ctx.RepoPath, lockPath)
+			info, err := os.Stat(fullPath)
+			if err != nil {
+				return model.CheckResult{
+					ID: c.ID(), Category: c.Category(), Name: c.Name(),
+					Status: model.StatusSkipped, Points: 0, MaxPoints: c.MaxPoints(),
+					Details: "Could not stat lockfile",
+				}
+			}
+			days = int(time.Since(info.ModTime()).Hours() / 24)
 		}
+	} else {
+		fullPath := filepath.Join(ctx.RepoPath, lockPath)
+		info, err := os.Stat(fullPath)
+		if err != nil {
+			return model.CheckResult{
+				ID: c.ID(), Category: c.Category(), Name: c.Name(),
+				Status: model.StatusSkipped, Points: 0, MaxPoints: c.MaxPoints(),
+				Details: "Could not stat lockfile",
+			}
+		}
+		days = int(time.Since(info.ModTime()).Hours() / 24)
 	}
-
-	age := time.Since(info.ModTime())
-	days := int(age.Hours() / 24)
 
 	switch {
 	case days <= 90:
@@ -182,19 +201,7 @@ func (c *DependencyCountCheck) Run(ctx *model.ScanContext) model.CheckResult {
 }
 
 func formatDepCount(n int) string {
-	if n == 1 {
-		return "1 dependency declared"
-	}
-	s := ""
-	for _, c := range []rune{'0' + rune(n/100%10), '0' + rune(n/10%10), '0' + rune(n%10)} {
-		if c != '0' || s != "" {
-			s += string(c)
-		}
-	}
-	if s == "" {
-		s = "0"
-	}
-	return s + " dependencies declared"
+	return fmt.Sprintf("%d dependencies declared", n)
 }
 
 func parseDependencyCount(ctx *model.ScanContext) (int, bool) {
@@ -270,6 +277,9 @@ func parseGoMod(ctx *model.ScanContext) (int, bool) {
 		}
 		// Count lines in require block that start with whitespace (indented deps)
 		if inRequire && len(line) > 0 && unicode.IsSpace(rune(line[0])) && trimmed != "" {
+			if strings.Contains(trimmed, "// indirect") {
+				continue
+			}
 			count++
 		}
 		// Also count single-line require statements outside blocks

@@ -59,7 +59,11 @@ func Markdown(w io.Writer, r *model.Report) {
 			if i >= 5 {
 				break
 			}
-			projected += s.Impact
+			if r.RawMax > 0 {
+				projected += s.Impact * 100 / r.RawMax
+			} else {
+				projected += s.Impact
+			}
 			if projected > 100 {
 				projected = 100
 			}

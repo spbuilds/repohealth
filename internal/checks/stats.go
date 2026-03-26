@@ -2,6 +2,7 @@ package checks
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/spbuilds/repohealth/internal/model"
@@ -96,11 +97,18 @@ func (c *LanguageDiversityCheck) Run(ctx *model.ScanContext) model.CheckResult {
 		}
 	}
 	if count == 1 {
+		// Finding the primary language is a pass — polyglot is not required
+		var primaryLang string
+		for lang := range ctx.Languages {
+			if !nonCodeLanguages[lang] {
+				primaryLang = lang
+				break
+			}
+		}
 		return model.CheckResult{
 			ID: c.ID(), Category: c.Category(), Name: c.Name(),
-			Status: model.StatusPartial, Points: 0, MaxPoints: c.MaxPoints(),
-			Details:    "1 language",
-			Suggestion: "Consider diversifying the language stack",
+			Status: model.StatusFull, Points: c.MaxPoints(), MaxPoints: c.MaxPoints(),
+			Details: fmt.Sprintf("1 language (%s)", primaryLang),
 		}
 	}
 	return model.CheckResult{
@@ -120,15 +128,22 @@ func (c *CommentRatioCheck) Name() string     { return "Comment ratio" }
 func (c *CommentRatioCheck) MaxPoints() int   { return 2 }
 
 func (c *CommentRatioCheck) Run(ctx *model.ScanContext) model.CheckResult {
-	var sampled []model.FileInfo
+	var sourceFiles []model.FileInfo
 	for _, f := range ctx.Files {
 		if isSourceFile(f) {
-			sampled = append(sampled, f)
-			if len(sampled) >= 50 {
-				break
-			}
+			sourceFiles = append(sourceFiles, f)
 		}
 	}
+	// Sort source files by path for deterministic sampling across platforms
+	sort.Slice(sourceFiles, func(i, j int) bool {
+		return sourceFiles[i].Path < sourceFiles[j].Path
+	})
+
+	maxSample := 50
+	if len(sourceFiles) < maxSample {
+		maxSample = len(sourceFiles)
+	}
+	sampled := sourceFiles[:maxSample]
 
 	if len(sampled) == 0 {
 		return model.CheckResult{

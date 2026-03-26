@@ -2,6 +2,7 @@ package report
 
 import (
 	"fmt"
+	"html"
 	"io"
 
 	"github.com/spbuilds/repohealth/internal/model"
@@ -41,7 +42,7 @@ footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; color:
 
 	// Header
 	fmt.Fprintf(w, "<h1>Repository Health Report</h1>\n")
-	fmt.Fprintf(w, "<p><strong>Repository:</strong> <code>%s</code></p>\n", r.RepoPath)
+	fmt.Fprintf(w, "<p><strong>Repository:</strong> <code>%s</code></p>\n", html.EscapeString(r.RepoPath))
 	if len(r.Timestamp) >= 10 {
 		fmt.Fprintf(w, "<p><strong>Date:</strong> %s</p>\n", r.Timestamp[:10])
 	}
@@ -81,7 +82,7 @@ footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; color:
 			statusClass = "status-partial"
 		}
 		fmt.Fprintf(w, "<tr><td>%s</td><td>%d/%d</td><td class=\"%s\">%s</td></tr>\n",
-			cat.Label, cat.Score, cat.MaxScore, statusClass, status)
+			html.EscapeString(cat.Label), cat.Score, cat.MaxScore, statusClass, status)
 	}
 	fmt.Fprintln(w, "</table>")
 
@@ -103,7 +104,7 @@ footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; color:
 			statusClass = "status-skipped"
 		}
 		fmt.Fprintf(w, "<tr><td>%s</td><td class=\"%s\">%s</td><td>%s</td></tr>\n",
-			check.Name, statusClass, statusIcon, check.Details)
+			html.EscapeString(check.Name), statusClass, statusIcon, html.EscapeString(check.Details))
 	}
 	fmt.Fprintln(w, "</table>")
 
@@ -128,12 +129,16 @@ footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; color:
 			if i >= 5 {
 				break
 			}
-			projected += s.Impact
+			if r.RawMax > 0 {
+				projected += s.Impact * 100 / r.RawMax
+			} else {
+				projected += s.Impact
+			}
 			if projected > 100 {
 				projected = 100
 			}
 			fmt.Fprintf(w, "<tr><td>%s</td><td>+%d pts</td><td>%d</td></tr>\n",
-				s.Message, s.Impact, projected)
+				html.EscapeString(s.Message), s.Impact, projected)
 		}
 		fmt.Fprintln(w, "</table>")
 	}

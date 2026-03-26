@@ -2,10 +2,36 @@ package checks
 
 import (
 	"strings"
+	"sync"
 
 	"github.com/spbuilds/repohealth/internal/model"
 	"github.com/spbuilds/repohealth/internal/scanner"
 )
+
+var ciCache struct {
+	mu       sync.Mutex
+	repoPath string
+	lines    []string
+}
+
+func getCIConfigLines(ctx *model.ScanContext) []string {
+	ciCache.mu.Lock()
+	if ciCache.repoPath == ctx.RepoPath {
+		lines := ciCache.lines
+		ciCache.mu.Unlock()
+		return lines
+	}
+	ciCache.mu.Unlock()
+
+	lines := readCIConfigs(ctx)
+
+	ciCache.mu.Lock()
+	ciCache.repoPath = ctx.RepoPath
+	ciCache.lines = lines
+	ciCache.mu.Unlock()
+
+	return lines
+}
 
 // CI-01: CI configuration exists
 type CIConfigExistsCheck struct{}
@@ -16,37 +42,39 @@ func (c *CIConfigExistsCheck) Name() string     { return "CI configuration exist
 func (c *CIConfigExistsCheck) MaxPoints() int   { return 6 }
 
 func (c *CIConfigExistsCheck) Run(ctx *model.ScanContext) model.CheckResult {
-	// Check for CI directories
-	ciDirs := map[string]string{
-		".github/workflows": "GitHub Actions",
-		".circleci":         "CircleCI",
-		".buildkite":        "Buildkite",
+	// Check CI directories (ordered for deterministic output)
+	type dirEntry struct{ dir, name string }
+	ciDirs := []dirEntry{
+		{".github/workflows", "GitHub Actions"},
+		{".circleci", "CircleCI"},
+		{".buildkite", "Buildkite"},
 	}
-	for dir, name := range ciDirs {
-		if _, ok := ctx.HasDir(dir); ok {
+	for _, d := range ciDirs {
+		if _, ok := ctx.HasDir(d.dir); ok {
 			return model.CheckResult{
 				ID: c.ID(), Category: c.Category(), Name: c.Name(),
 				Status: model.StatusFull, Points: c.MaxPoints(), MaxPoints: c.MaxPoints(),
-				Details: name,
+				Details: d.name,
 			}
 		}
 	}
 
-	// Check for CI files
-	ciFiles := map[string]string{
-		".gitlab-ci.yml":          "GitLab CI",
-		"Jenkinsfile":             "Jenkins",
-		".travis.yml":             "Travis CI",
-		"bitbucket-pipelines.yml": "Bitbucket Pipelines",
-		"azure-pipelines.yml":     "Azure Pipelines",
-		"Taskfile.yml":            "Taskfile",
+	// Check CI files (ordered for deterministic output)
+	type fileEntry struct{ file, name string }
+	ciFiles := []fileEntry{
+		{".gitlab-ci.yml", "GitLab CI"},
+		{"Jenkinsfile", "Jenkins"},
+		{".travis.yml", "Travis CI"},
+		{"bitbucket-pipelines.yml", "Bitbucket Pipelines"},
+		{"azure-pipelines.yml", "Azure Pipelines"},
+		{"Taskfile.yml", "Taskfile"},
 	}
-	for file, name := range ciFiles {
-		if _, ok := ctx.HasFile(file); ok {
+	for _, f := range ciFiles {
+		if _, ok := ctx.HasFile(f.file); ok {
 			return model.CheckResult{
 				ID: c.ID(), Category: c.Category(), Name: c.Name(),
 				Status: model.StatusFull, Points: c.MaxPoints(), MaxPoints: c.MaxPoints(),
-				Details: name,
+				Details: f.name,
 			}
 		}
 	}
@@ -63,14 +91,28 @@ func (c *CIConfigExistsCheck) Run(ctx *model.ScanContext) model.CheckResult {
 func readCIConfigs(ctx *model.ScanContext) []string {
 	var allLines []string
 	for _, f := range ctx.Files {
-		if strings.HasPrefix(f.Path, ".github/workflows/") && strings.HasSuffix(f.Name, ".yml") {
+		if strings.HasPrefix(f.Path, ".github/workflows/") && (strings.HasSuffix(f.Name, ".yml") || strings.HasSuffix(f.Name, ".yaml")) {
 			lines, _ := scanner.ReadFileLines(ctx.RepoPath, f.Path)
 			allLines = append(allLines, lines...)
 		}
 	}
-	for _, ciFile := range []string{".gitlab-ci.yml", ".travis.yml", "Jenkinsfile"} {
+	for _, ciFile := range []string{".gitlab-ci.yml", ".travis.yml", "Jenkinsfile", "azure-pipelines.yml", "bitbucket-pipelines.yml", "Taskfile.yml"} {
 		if _, ok := ctx.HasFile(ciFile); ok {
 			lines, _ := scanner.ReadFileLines(ctx.RepoPath, ciFile)
+			allLines = append(allLines, lines...)
+		}
+	}
+	// CircleCI
+	for _, f := range ctx.Files {
+		if strings.HasPrefix(f.Path, ".circleci/") && (strings.HasSuffix(f.Name, ".yml") || strings.HasSuffix(f.Name, ".yaml")) {
+			lines, _ := scanner.ReadFileLines(ctx.RepoPath, f.Path)
+			allLines = append(allLines, lines...)
+		}
+	}
+	// Buildkite
+	for _, f := range ctx.Files {
+		if strings.HasPrefix(f.Path, ".buildkite/") && (strings.HasSuffix(f.Name, ".yml") || strings.HasSuffix(f.Name, ".yaml")) {
+			lines, _ := scanner.ReadFileLines(ctx.RepoPath, f.Path)
 			allLines = append(allLines, lines...)
 		}
 	}
@@ -90,19 +132,6 @@ func hasCIConfig(ctx *model.ScanContext) bool {
 	for _, f := range ciFiles {
 		if _, ok := ctx.HasFile(f); ok {
 			return true
-		}
-	}
-	return false
-}
-
-// containsAny returns true if any line in lines contains any of the given substrings.
-func containsAny(lines []string, substrings []string) bool {
-	for _, line := range lines {
-		lower := strings.ToLower(line)
-		for _, s := range substrings {
-			if strings.Contains(lower, s) {
-				return true
-			}
 		}
 	}
 	return false
@@ -138,7 +167,7 @@ func (c *CIRunsTestsCheck) Run(ctx *model.ScanContext) model.CheckResult {
 		}
 	}
 
-	lines := readCIConfigs(ctx)
+	lines := getCIConfigLines(ctx)
 	testPatterns := []string{
 		"npm test", "pnpm test", "yarn test", "bun test",
 		"vitest", "jest", "mocha", "ava",
@@ -183,7 +212,7 @@ func (c *CIRunsLinterCheck) Run(ctx *model.ScanContext) model.CheckResult {
 		}
 	}
 
-	lines := readCIConfigs(ctx)
+	lines := getCIConfigLines(ctx)
 	lintPatterns := []string{
 		"eslint", "biome", "oxlint", "prettier --check",
 		"ruff", "flake8", "pylint", "mypy", "black --check",
@@ -226,7 +255,7 @@ func (c *CIRunsBuildCheck) Run(ctx *model.ScanContext) model.CheckResult {
 		}
 	}
 
-	lines := readCIConfigs(ctx)
+	lines := getCIConfigLines(ctx)
 	buildPatterns := []string{
 		"npm run build", "pnpm build", "yarn build", "bun build",
 		"vite build", "next build", "nuxt build",

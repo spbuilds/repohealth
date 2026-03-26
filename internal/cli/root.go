@@ -3,7 +3,6 @@ package cli
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"runtime/debug"
 	"time"
 
@@ -77,11 +76,7 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	// Load config
-	cfgPath := repoPath
-	if configPath != "" {
-		cfgPath = filepath.Dir(configPath)
-	}
-	fileCfg, err := config.LoadConfig(cfgPath)
+	fileCfg, err := config.LoadConfig(repoPath, configPath)
 	if err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
@@ -95,6 +90,9 @@ func run(cmd *cobra.Command, args []string) error {
 	ctx, scanErr := scanner.Scan(repoPath, excludes)
 	if scanErr != nil {
 		return fmt.Errorf("failed to scan repository: %w", scanErr)
+	}
+	if ctx.Truncated {
+		fmt.Fprintf(os.Stderr, "Warning: scan truncated at %d files. Results may be incomplete.\n", len(ctx.Files))
 	}
 
 	registry := checks.NewRegistry()

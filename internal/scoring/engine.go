@@ -75,6 +75,9 @@ func Score(results []model.CheckResult, repoPath string, languages map[string]in
 		if skippedMax > 0 {
 			factor := float64(effectiveMax) / float64(catMax)
 			catScore = int(math.Round(float64(catScore) * factor))
+			if catScore > effectiveMax {
+				catScore = effectiveMax
+			}
 		}
 
 		label := categoryLabels[cat]
@@ -94,6 +97,7 @@ func Score(results []model.CheckResult, repoPath string, languages map[string]in
 	}
 
 	// Normalize to 0-100 scale
+	report.RawMax = totalMax
 	if totalMax > 0 {
 		report.Score = int(math.Round(float64(totalScore) / float64(totalMax) * 100))
 	}

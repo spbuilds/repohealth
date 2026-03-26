@@ -16,6 +16,7 @@ func sampleReport() *model.Report {
 		Timestamp:     "2026-03-26T12:00:00Z",
 		Score:         75,
 		MaxScore:      100,
+		RawMax:        100,
 		Grade:         "B",
 		Categories: []model.CategoryResult{
 			{Name: "docs", Label: "Documentation", Score: 15, MaxScore: 15},

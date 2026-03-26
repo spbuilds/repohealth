@@ -46,6 +46,7 @@ type Report struct {
 	DurationMs    int64            `json:"duration_ms"`
 	Score         int              `json:"score"`
 	MaxScore      int              `json:"max_score"`
+	RawMax        int              `json:"raw_max"`
 	Grade         string           `json:"grade"`
 	Categories    []CategoryResult `json:"categories"`
 	Checks        []CheckResult    `json:"checks"`
@@ -66,6 +67,7 @@ type FileInfo struct {
 type ScanContext struct {
 	RepoPath     string
 	GitAvailable bool
+	Truncated    bool
 	Files        []FileInfo
 	Dirs         []string
 	Languages    map[string]int

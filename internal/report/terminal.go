@@ -116,11 +116,16 @@ func Terminal(w io.Writer, r *model.Report, version string) {
 			if i >= 5 {
 				break
 			}
-			projected += s.Impact
+			prev := projected
+			if r.RawMax > 0 {
+				projected += s.Impact * 100 / r.RawMax
+			} else {
+				projected += s.Impact
+			}
 			if projected > 100 {
 				projected = 100
 			}
-			green.Fprintf(w, "    %d \u2192 %d", projected-s.Impact, projected)
+			green.Fprintf(w, "    %d \u2192 %d", prev, projected)
 			fmt.Fprintf(w, "  %s\n", s.Message)
 		}
 		fmt.Fprintln(w)
@@ -160,7 +165,10 @@ func formatLanguages(langs map[string]int) string {
 	}
 
 	sort.Slice(sorted, func(i, j int) bool {
-		return sorted[i].count > sorted[j].count
+		if sorted[i].count != sorted[j].count {
+			return sorted[i].count > sorted[j].count
+		}
+		return sorted[i].name < sorted[j].name
 	})
 
 	if len(sorted) == 0 {

@@ -11,16 +11,17 @@ import (
 
 var secretPatterns = []struct {
 	name    string
+	prefix  string // cheap pre-filter — skip regex if prefix absent (empty = always run)
 	pattern *regexp.Regexp
 }{
-	{"AWS access key", regexp.MustCompile(`AKIA[0-9A-Z]{16}`)},
-	{"GitHub token", regexp.MustCompile(`ghp_[A-Za-z0-9]{36}`)},
-	{"GitHub OAuth", regexp.MustCompile(`gho_[A-Za-z0-9]{36}`)},
-	{"Slack token", regexp.MustCompile(`xox[baprs]-[A-Za-z0-9-]{10,}`)},
-	{"Stripe secret key", regexp.MustCompile(`sk_live_[A-Za-z0-9]{24,}`)},
-	{"Google API key", regexp.MustCompile(`AIza[0-9A-Za-z_-]{35}`)},
-	{"Private key block", regexp.MustCompile(`-----BEGIN\s+(RSA|EC|OPENSSH|DSA)?\s*PRIVATE KEY-----`)},
-	{"Generic secret assignment", regexp.MustCompile(`(?i)(password|secret|api_key|apikey|token)\s*[:=]\s*['"][^'"]{8,}['"]`)},
+	{"AWS access key", "AKIA", regexp.MustCompile(`AKIA[0-9A-Z]{16}`)},
+	{"GitHub token", "ghp_", regexp.MustCompile(`ghp_[A-Za-z0-9]{36}`)},
+	{"GitHub OAuth", "gho_", regexp.MustCompile(`gho_[A-Za-z0-9]{36}`)},
+	{"Slack token", "xox", regexp.MustCompile(`xox[baprs]-[A-Za-z0-9-]{10,}`)},
+	{"Stripe secret key", "sk_live_", regexp.MustCompile(`sk_live_[A-Za-z0-9]{24,}`)},
+	{"Google API key", "AIza", regexp.MustCompile(`AIza[0-9A-Za-z_-]{35}`)},
+	{"Private key block", "-----BEGIN", regexp.MustCompile(`-----BEGIN\s+(\w+\s+)*PRIVATE KEY-----`)},
+	{"Generic secret assignment", "", regexp.MustCompile(`(?i)(password|secret|api_key|apikey|token)\s*[:=]\s*['"][^'"]{8,}['"]`)},
 }
 
 // SEC-02: No secrets in repo
@@ -38,12 +39,15 @@ func (c *NoSecretsCheck) Run(ctx *model.ScanContext) model.CheckResult {
 			continue
 		}
 		base := filepath.Base(f.Path)
-		if base == ".env" {
-			return model.CheckResult{
-				ID: c.ID(), Category: c.Category(), Name: c.Name(),
-				Status: model.StatusNone, Points: 0, MaxPoints: c.MaxPoints(),
-				Details:    ".env file found in repository",
-				Suggestion: "Remove .env from the repository and add it to .gitignore",
+		if base == ".env" || strings.HasPrefix(base, ".env.") {
+			// Skip .env.example and .env.sample
+			if base != ".env.example" && base != ".env.sample" && base != ".env.template" {
+				return model.CheckResult{
+					ID: c.ID(), Category: c.Category(), Name: c.Name(),
+					Status: model.StatusNone, Points: 0, MaxPoints: c.MaxPoints(),
+					Details:    base + " file found in repository",
+					Suggestion: "Remove " + base + " from the repository and add it to .gitignore",
+				}
 			}
 		}
 	}
@@ -65,6 +69,9 @@ func (c *NoSecretsCheck) Run(ctx *model.ScanContext) model.CheckResult {
 
 		for _, line := range lines {
 			for _, sp := range secretPatterns {
+				if sp.prefix != "" && !strings.Contains(line, sp.prefix) {
+					continue
+				}
 				if sp.pattern.MatchString(line) {
 					return model.CheckResult{
 						ID: c.ID(), Category: c.Category(), Name: c.Name(),

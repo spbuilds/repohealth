@@ -30,8 +30,11 @@ func Recommendations(results []model.CheckResult) []model.Suggestion {
 		})
 	}
 
-	sort.Slice(suggestions, func(i, j int) bool {
-		return suggestions[i].Impact > suggestions[j].Impact
+	sort.SliceStable(suggestions, func(i, j int) bool {
+		if suggestions[i].Impact != suggestions[j].Impact {
+			return suggestions[i].Impact > suggestions[j].Impact
+		}
+		return suggestions[i].CheckID < suggestions[j].CheckID
 	})
 
 	return suggestions

@@ -24,12 +24,24 @@ var todoCache struct {
 
 func scanTodos(ctx *model.ScanContext) todoStats {
 	todoCache.Lock()
-	defer todoCache.Unlock()
-
 	if todoCache.key == ctx.RepoPath {
-		return todoCache.stats
+		result := todoCache.stats
+		todoCache.Unlock()
+		return result
 	}
+	todoCache.Unlock()
 
+	stats := doTodoScan(ctx)
+
+	todoCache.Lock()
+	todoCache.key = ctx.RepoPath
+	todoCache.stats = stats
+	todoCache.Unlock()
+
+	return stats
+}
+
+func doTodoScan(ctx *model.ScanContext) todoStats {
 	var stats todoStats
 	for _, f := range ctx.Files {
 		if f.IsDir {
@@ -61,9 +73,6 @@ func scanTodos(ctx *model.ScanContext) todoStats {
 			}
 		}
 	}
-
-	todoCache.key = ctx.RepoPath
-	todoCache.stats = stats
 	return stats
 }
 

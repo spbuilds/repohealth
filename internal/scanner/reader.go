@@ -2,6 +2,7 @@ package scanner
 
 import (
 	"bufio"
+	"io"
 	"os"
 	"path/filepath"
 )
@@ -32,7 +33,10 @@ func ReadFileLines(repoPath, relPath string) ([]string, error) {
 	// Check for binary file (null bytes in first 512 bytes)
 	header := make([]byte, 512)
 	n, err := f.Read(header)
-	if err != nil && n == 0 {
+	if n == 0 {
+		if err == io.EOF || err == nil {
+			return []string{}, nil // empty file, not binary
+		}
 		return nil, err
 	}
 	for i := 0; i < n; i++ {
@@ -48,6 +52,7 @@ func ReadFileLines(repoPath, relPath string) ([]string, error) {
 
 	var lines []string
 	scanner := bufio.NewScanner(f)
+	scanner.Buffer(make([]byte, 0, 256*1024), 256*1024) // 256KB max line length
 	for scanner.Scan() {
 		lines = append(lines, scanner.Text())
 		if len(lines) >= maxLinesPerFile {
