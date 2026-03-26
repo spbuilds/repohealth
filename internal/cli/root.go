@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"time"
 
 	"github.com/fatih/color"
@@ -15,8 +16,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Version is set at build time via ldflags.
+// Build metadata — set at build time via ldflags.
 var Version = "dev"
+var Commit = "none"
+var Date = "unknown"
 
 var noColor bool
 var format string
@@ -34,6 +37,13 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
+	// Version fallback for go install (no ldflags)
+	if Version == "dev" {
+		if info, ok := debug.ReadBuildInfo(); ok && info.Main.Version != "" && info.Main.Version != "(devel)" {
+			Version = info.Main.Version
+		}
+	}
+
 	rootCmd.Flags().BoolVar(&noColor, "no-color", false, "Disable colored output")
 	rootCmd.Flags().StringVarP(&format, "format", "f", "terminal", "Output format: terminal, json, markdown, html")
 	rootCmd.Flags().BoolVarP(&scoreOnly, "score-only", "s", false, "Output only the score")
