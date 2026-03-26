@@ -105,6 +105,26 @@ func Terminal(w io.Writer, r *model.Report, version string) {
 		}
 		fmt.Fprintln(w)
 	}
+
+	// Improvement plan
+	if len(r.Suggestions) > 0 {
+		dim.Fprintln(w, "  "+strings.Repeat("\u2500", 46))
+		fmt.Fprintln(w)
+		bold.Fprintln(w, "  Improvement Plan")
+		projected := r.Score
+		for i, s := range r.Suggestions {
+			if i >= 5 {
+				break
+			}
+			projected += s.Impact
+			if projected > 100 {
+				projected = 100
+			}
+			green.Fprintf(w, "    %d \u2192 %d", projected-s.Impact, projected)
+			fmt.Fprintf(w, "  %s\n", s.Message)
+		}
+		fmt.Fprintln(w)
+	}
 }
 
 func statusIcon(s model.Status) string {

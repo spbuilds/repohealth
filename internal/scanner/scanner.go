@@ -9,6 +9,8 @@ import (
 	"github.com/spbuilds/repohealth/internal/model"
 )
 
+const maxFilesToScan = 100000
+
 // skipDirs are directories that should never be scanned.
 // These are build outputs, caches, dependency dirs, and IDE configs
 // that do not represent the repository's own source or documentation.
@@ -155,6 +157,9 @@ func Scan(repoPath string, excludes []string) (*model.ScanContext, error) {
 			IsDir: false,
 		}
 		ctx.Files = append(ctx.Files, fi)
+		if len(ctx.Files) >= maxFilesToScan {
+			return filepath.SkipAll
+		}
 
 		// Detect language
 		ext := strings.ToLower(filepath.Ext(name))

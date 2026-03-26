@@ -22,6 +22,7 @@ var categoryLabels = map[string]string{
 // Score aggregates check results into a complete report.
 func Score(results []model.CheckResult, repoPath string, languages map[string]int, filesAnalyzed int, startTime time.Time) *model.Report {
 	report := &model.Report{
+		SchemaVersion: "1.0",
 		RepoPath:      repoPath,
 		Timestamp:     time.Now().UTC().Format(time.RFC3339),
 		DurationMs:    time.Since(startTime).Milliseconds(),

@@ -39,6 +39,7 @@ type Suggestion struct {
 
 // Report is the complete output structure.
 type Report struct {
+	SchemaVersion string           `json:"schema_version"`
 	Version       string           `json:"version"`
 	RepoPath      string           `json:"repo_path"`
 	Timestamp     string           `json:"timestamp"`
