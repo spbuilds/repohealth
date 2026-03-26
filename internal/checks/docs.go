@@ -11,7 +11,7 @@ func (c *ReadmeExistsCheck) Name() string     { return "README exists" }
 func (c *ReadmeExistsCheck) MaxPoints() int   { return 4 }
 
 func (c *ReadmeExistsCheck) Run(ctx *model.ScanContext) model.CheckResult {
-	found, ok := ctx.HasFile("README.md", "README", "README.rst", "readme.md", "Readme.md")
+	found, ok := ctx.HasRootFile("README.md", "README", "README.rst", "readme.md", "Readme.md")
 	if ok {
 		return model.CheckResult{
 			ID: c.ID(), Category: c.Category(), Name: c.Name(),
@@ -36,7 +36,7 @@ func (c *ReadmeContentCheck) Name() string     { return "README has content" }
 func (c *ReadmeContentCheck) MaxPoints() int   { return 2 }
 
 func (c *ReadmeContentCheck) Run(ctx *model.ScanContext) model.CheckResult {
-	size := ctx.FileSize("README.md", "README", "README.rst", "readme.md", "Readme.md")
+	size := ctx.RootFileSize("README.md", "README", "README.rst", "readme.md", "Readme.md")
 	if size > 100 {
 		return model.CheckResult{
 			ID: c.ID(), Category: c.Category(), Name: c.Name(),
@@ -69,7 +69,7 @@ func (c *LicenseExistsCheck) Name() string     { return "LICENSE exists" }
 func (c *LicenseExistsCheck) MaxPoints() int   { return 3 }
 
 func (c *LicenseExistsCheck) Run(ctx *model.ScanContext) model.CheckResult {
-	found, ok := ctx.HasFile("LICENSE", "LICENSE.md", "LICENCE", "COPYING", "LICENSE.txt")
+	found, ok := ctx.HasRootFile("LICENSE", "LICENSE.md", "LICENCE", "COPYING", "LICENSE.txt")
 	if ok {
 		return model.CheckResult{
 			ID: c.ID(), Category: c.Category(), Name: c.Name(),
@@ -94,7 +94,7 @@ func (c *ContributingExistsCheck) Name() string     { return "CONTRIBUTING exist
 func (c *ContributingExistsCheck) MaxPoints() int   { return 2 }
 
 func (c *ContributingExistsCheck) Run(ctx *model.ScanContext) model.CheckResult {
-	found, ok := ctx.HasFile("CONTRIBUTING.md", "CONTRIBUTING", ".github/CONTRIBUTING.md")
+	found, ok := ctx.HasRootFile("CONTRIBUTING.md", "CONTRIBUTING", ".github/CONTRIBUTING.md")
 	if ok {
 		return model.CheckResult{
 			ID: c.ID(), Category: c.Category(), Name: c.Name(),
@@ -119,7 +119,7 @@ func (c *CodeOfConductExistsCheck) Name() string     { return "CODE_OF_CONDUCT e
 func (c *CodeOfConductExistsCheck) MaxPoints() int   { return 1 }
 
 func (c *CodeOfConductExistsCheck) Run(ctx *model.ScanContext) model.CheckResult {
-	found, ok := ctx.HasFile("CODE_OF_CONDUCT.md", ".github/CODE_OF_CONDUCT.md")
+	found, ok := ctx.HasRootFile("CODE_OF_CONDUCT.md", ".github/CODE_OF_CONDUCT.md")
 	if ok {
 		return model.CheckResult{
 			ID: c.ID(), Category: c.Category(), Name: c.Name(),
@@ -144,7 +144,7 @@ func (c *SecurityExistsCheck) Name() string     { return "SECURITY.md exists" }
 func (c *SecurityExistsCheck) MaxPoints() int   { return 2 }
 
 func (c *SecurityExistsCheck) Run(ctx *model.ScanContext) model.CheckResult {
-	found, ok := ctx.HasFile("SECURITY.md", ".github/SECURITY.md")
+	found, ok := ctx.HasRootFile("SECURITY.md", ".github/SECURITY.md")
 	if ok {
 		return model.CheckResult{
 			ID: c.ID(), Category: c.Category(), Name: c.Name(),
@@ -169,7 +169,7 @@ func (c *ChangelogExistsCheck) Name() string     { return "CHANGELOG exists" }
 func (c *ChangelogExistsCheck) MaxPoints() int   { return 1 }
 
 func (c *ChangelogExistsCheck) Run(ctx *model.ScanContext) model.CheckResult {
-	found, ok := ctx.HasFile("CHANGELOG.md", "CHANGELOG", "HISTORY.md", "CHANGES.md")
+	found, ok := ctx.HasRootFile("CHANGELOG.md", "CHANGELOG", "HISTORY.md", "CHANGES.md")
 	if ok {
 		return model.CheckResult{
 			ID: c.ID(), Category: c.Category(), Name: c.Name(),

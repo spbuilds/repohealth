@@ -82,6 +82,33 @@ func (ctx *ScanContext) HasFile(names ...string) (string, bool) {
 	return "", false
 }
 
+// HasRootFile checks if a file exists at the repo root or in .github/.
+// Use this for community files (README, LICENSE, etc.) that should only
+// count when they are at the top level, not inside build output or dependencies.
+func (ctx *ScanContext) HasRootFile(names ...string) (string, bool) {
+	for _, f := range ctx.Files {
+		for _, name := range names {
+			// Match exact root path (e.g., "README.md") or .github/ path
+			if f.Path == name {
+				return f.Path, true
+			}
+		}
+	}
+	return "", false
+}
+
+// RootFileSize returns the size of a file at the repo root, or -1 if not found.
+func (ctx *ScanContext) RootFileSize(names ...string) int64 {
+	for _, f := range ctx.Files {
+		for _, name := range names {
+			if f.Path == name {
+				return f.Size
+			}
+		}
+	}
+	return -1
+}
+
 // HasDir checks if a directory with any of the given names exists.
 func (ctx *ScanContext) HasDir(names ...string) (string, bool) {
 	for _, d := range ctx.Dirs {

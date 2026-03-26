@@ -10,17 +10,37 @@ import (
 )
 
 // skipDirs are directories that should never be scanned.
+// These are build outputs, caches, dependency dirs, and IDE configs
+// that do not represent the repository's own source or documentation.
 var skipDirs = map[string]bool{
-	".git":          true,
-	"node_modules":  true,
-	"vendor":        true,
-	".venv":         true,
+	// Version control
+	".git": true,
+	// Dependencies
+	"node_modules": true,
+	"vendor":       true,
+	".venv":        true,
+	// Build output
+	"dist":        true,
+	"build":       true,
+	"target":      true,
+	"out":         true,
+	".next":       true,
+	".nuxt":       true,
+	".output":     true,
+	".svelte-kit": true,
+	// Caches
 	"__pycache__":   true,
 	".tox":          true,
 	".mypy_cache":   true,
 	".pytest_cache": true,
-	"dist":          true,
-	"build":         true,
+	".cache":        true,
+	".turbo":        true,
+	// Coverage output
+	"coverage":    true,
+	".nyc_output": true,
+	// IDE
+	".idea":   true,
+	".vscode": true,
 }
 
 // languageExtensions maps file extensions to language names.
