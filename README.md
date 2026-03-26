@@ -80,18 +80,20 @@ Well-maintained libraries with complete docs and tests score highest. Large mono
 
 ## What It Checks
 
-RepoHealth runs 14 checks across 4 categories:
+RepoHealth runs 33 checks across 8 categories:
 
 | Category | What It Measures | Checks |
 |----------|-----------------|--------|
-| **Documentation** | Community and project files — README, LICENSE, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, CHANGELOG | 7 |
-| **Testing** | Test file detection, test directories, test framework configuration | 3 |
-| **CI/CD** | GitHub Actions, GitLab CI, Jenkins, CircleCI, Travis CI, and more | 1 |
-| **Activity** | Last commit recency, contributor count | 2 |
+| **Documentation** | README, LICENSE, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, CHANGELOG | 7 |
+| **Testing** | Test files, directories, framework config, coverage config, test-to-source ratio | 5 |
+| **CI/CD** | CI presence, runs tests, runs linter, runs build | 4 |
+| **Dependencies** | Lockfile, package manager, freshness, dependency count | 4 |
+| **Security** | Secret scanning, .gitignore coverage, dependency pinning, branch protection | 4 |
+| **Code Statistics** | Source files, language diversity, comment ratio, vendor bloat | 4 |
+| **Activity** | Last commit, commit frequency, contributors, releases, bus factor | 5 |
+| **TODO / Debt** | TODO count, density per KLOC, critical markers | 3 |
 
 Each check contributes points. The total is normalized to 0-100 and graded A+ through F.
-
-> More check categories (dependencies, security posture, code stats, TODO scanning) coming in v0.2.
 
 ## How Scoring Works
 
@@ -146,6 +148,18 @@ repohealth . --format json
 repohealth . --score-only
 # Output: 78/100 (B+)
 
+# CI quality gate — fail if below threshold
+repohealth . --ci --threshold 70
+
+# HTML report
+repohealth . --format html > report.html
+
+# Markdown report
+repohealth . --format markdown
+
+# Use custom config
+repohealth . --config .repohealthrc.yaml
+
 # Disable colored output
 repohealth . --no-color
 ```
@@ -159,19 +173,30 @@ Add RepoHealth to your GitHub Actions workflow:
   run: go install github.com/spbuilds/repohealth/cmd/repohealth@latest
 
 - name: Check repo health
-  run: repohealth . --score-only
+  run: repohealth . --ci --threshold 70
+```
+
+RepoHealth auto-detects CI environments (`CI=true`, `GITHUB_ACTIONS=true`) and disables colors. Exit code 2 means the score is below threshold.
+
+**Output formats in CI:**
+
+```bash
+repohealth . --score-only          # 78/100 (B+)
+repohealth . --format json         # full JSON for dashboards
+repohealth . --format markdown     # Markdown for PR comments
+repohealth . --format html > report.html  # standalone HTML report
 ```
 
 ## Roadmap
 
-| Version | What's Included |
-|---------|----------------|
-| **v0.1** | 14 checks, terminal + JSON output, scoring engine |
-| **v0.2** | TODO scanning, lockfile detection, coverage config, CI content parsing |
-| **v0.3** | CI mode (`--threshold`), Markdown reports |
-| **v0.4** | Homebrew tap |
-| **v0.5** | GitHub Action |
-| **v1.0** | Stable release, 33 checks across 8 categories |
+| Version | What's Included | Status |
+|---------|----------------|--------|
+| **v0.1** | 14 checks, terminal + JSON output, scoring engine | Released |
+| **v0.2** | 33 checks across 8 categories, TODO scanning, deps, security, CI parsing | Released |
+| **v0.3** | HTML report, config file, CI auto-detection, improvement plan, `--threshold` | Released |
+| **v0.4** | Homebrew tap | Planned |
+| **v0.5** | GitHub Action | Planned |
+| **v1.0** | Stable release, plugin system | Planned |
 
 ## Contributing
 
