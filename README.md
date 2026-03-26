@@ -4,18 +4,27 @@
 [![Go](https://img.shields.io/badge/go-1.22+-00ADD8.svg)](https://go.dev)
 [![CI](https://github.com/spbuilds/repohealth/actions/workflows/ci.yml/badge.svg)](https://github.com/spbuilds/repohealth/actions/workflows/ci.yml)
 
-Deterministic CLI tool that analyzes repository health and produces a unified score.
+**A Lighthouse-style health check for Git repositories.**
 
-**Lighthouse for Git repositories.**
+RepoHealth analyzes a repository's documentation, tests, CI/CD configuration, and maintenance activity to produce a composite health score (0-100) with actionable improvement recommendations. One command, one report, one score.
+
+- **Deterministic** — same repo always produces the same score. No AI, no randomness.
+- **Zero-config** — works out of the box on any Git repository.
+- **Fast** — analyzes 58,000 files in under 300ms.
+- **Offline** — no network access, no API keys, no accounts.
+
+**Use cases:** Pre-publish repo audit &middot; CI quality gates &middot; OSS evaluation before contributing
+
+## Example Output
 
 ```
 $ repohealth .
 
-  RepoHealth v0.1.0
+  RepoHealth v0.1.1
 
   Repository: /home/dev/my-project
   Languages:  Go (74%), Shell (18%), Dockerfile (8%)
-  Analyzed:   247 files in 1.2s
+  Analyzed:   247 files in 15ms
 
   ──────────────────────────────────────────────
 
@@ -51,13 +60,51 @@ $ repohealth .
     +1 pt   Add CODE_OF_CONDUCT.md
 ```
 
-## Features
+## Real Repository Scores
 
-- **Deterministic** — same repo always produces the same score. No AI, no randomness.
-- **Zero-config** — works out of the box on any git repository.
-- **Fast** — full analysis in under 3 seconds.
-- **Offline** — core checks require no network access.
-- **Actionable** — every finding includes a specific recommendation.
+Tested on well-known open-source projects:
+
+| Repository | Language | Score | Grade | Time |
+|------------|----------|-------|-------|------|
+| [axios](https://github.com/axios/axios) | JavaScript | 93 | A | 10ms |
+| [requests](https://github.com/psf/requests) | Python | 93 | A | 9ms |
+| [fastapi](https://github.com/tiangolo/fastapi) | Python | 88 | A- | 25ms |
+| [hono](https://github.com/honojs/hono) | TypeScript | 81 | B+ | 11ms |
+| [vscode](https://github.com/microsoft/vscode) | TypeScript | 79 | B | 91ms |
+| [rust](https://github.com/rust-lang/rust) | Rust | 79 | B | 255ms |
+| [kubernetes](https://github.com/kubernetes/kubernetes) | Go | 77 | B | 159ms |
+| [redis](https://github.com/redis/redis) | C | 65 | C+ | 15ms |
+| [express](https://github.com/expressjs/express) | JavaScript | 51 | D | 10ms |
+
+Well-maintained libraries with complete docs and tests score highest. Large monorepos and older projects score lower due to non-standard CI and missing community files.
+
+## What It Checks
+
+RepoHealth runs 14 checks across 4 categories:
+
+| Category | What It Measures | Checks |
+|----------|-----------------|--------|
+| **Documentation** | Community and project files — README, LICENSE, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, CHANGELOG | 7 |
+| **Testing** | Test file detection, test directories, test framework configuration | 3 |
+| **CI/CD** | GitHub Actions, GitLab CI, Jenkins, CircleCI, Travis CI, and more | 1 |
+| **Activity** | Last commit recency, contributor count | 2 |
+
+Each check contributes points. The total is normalized to 0-100 and graded A+ through F.
+
+> More check categories (dependencies, security posture, code stats, TODO scanning) coming in v0.2.
+
+## How Scoring Works
+
+| Grade | Score | Meaning |
+|-------|-------|---------|
+| A+ | 95-100 | Exceptional — production-grade, well-governed |
+| A / A- | 85-94 | Excellent — strong across all dimensions |
+| B+ / B / B- | 70-84 | Good — solid fundamentals, clear improvement areas |
+| C+ / C / C- | 55-69 | Needs improvement — notable gaps |
+| D | 40-54 | Failing — major investment needed |
+| F | 0-39 | Critical — fundamental project hygiene missing |
+
+Every check that scores below full generates a specific, actionable suggestion sorted by potential point impact.
 
 ## Installation
 
@@ -82,10 +129,10 @@ repohealth .
 # Analyze a specific repo
 repohealth /path/to/repo
 
-# JSON output (for CI pipelines, scripts, dashboards)
+# JSON output for CI pipelines, scripts, and dashboards
 repohealth . --format json
 
-# Score only (for badges, automation)
+# Score only — single line for badges and automation
 repohealth . --score-only
 # Output: 78/100 (B+)
 
@@ -93,30 +140,16 @@ repohealth . --score-only
 repohealth . --no-color
 ```
 
-## What It Checks
+## Roadmap
 
-| Category | Checks | Max Points |
-|----------|--------|------------|
-| Documentation | README, LICENSE, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, CHANGELOG | 15 |
-| Testing | Test files, test directories, framework config | 14 |
-| CI/CD | GitHub Actions, GitLab CI, Jenkins, CircleCI | 6 |
-| Activity | Last commit recency, contributor count | 8 |
-| **Total** | **14 checks** | **43** |
-
-Score is normalized to 0-100 and graded A+ through F.
-
-> More check categories (dependencies, security, code stats, TODO scanning) coming in v0.2.
-
-## Scoring
-
-| Grade | Score | Meaning |
-|-------|-------|---------|
-| A+ | 95-100 | Exceptional |
-| A / A- | 85-94 | Excellent |
-| B+ / B / B- | 70-84 | Good |
-| C+ / C / C- | 55-69 | Needs improvement |
-| D | 40-54 | Failing |
-| F | 0-39 | Critical |
+| Version | What's Included |
+|---------|----------------|
+| **v0.1** | 14 checks, terminal + JSON output, scoring engine |
+| **v0.2** | TODO scanning, lockfile detection, coverage config, CI content parsing |
+| **v0.3** | CI mode (`--threshold`), Markdown reports |
+| **v0.4** | GoReleaser, Homebrew tap |
+| **v0.5** | GitHub Action |
+| **v1.0** | Stable release, 33 checks across 8 categories |
 
 ## Contributing
 
