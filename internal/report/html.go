@@ -116,7 +116,7 @@ footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; color:
 				break
 			}
 			fmt.Fprintf(w, "<div class=\"suggestion\"><span class=\"impact\">+%d pts</span> — %s</div>\n",
-				s.Impact, s.Message)
+				s.Impact, html.EscapeString(s.Message))
 		}
 	}
 

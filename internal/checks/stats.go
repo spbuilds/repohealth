@@ -2,6 +2,8 @@ package checks
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -217,21 +219,20 @@ func (c *NoVendorBloatCheck) Name() string     { return "No vendor bloat" }
 func (c *NoVendorBloatCheck) MaxPoints() int   { return 1 }
 
 func (c *NoVendorBloatCheck) Run(ctx *model.ScanContext) model.CheckResult {
-	for _, f := range ctx.Files {
-		if strings.HasPrefix(f.Path, "vendor/") {
+	// Check for vendor/node_modules directories via os.Stat since scanner
+	// skips these dirs (they're in skipDirs) so ctx.Files won't contain them.
+	vendorDirs := []struct{ dir, name, suggestion string }{
+		{"vendor", "vendor/ directory found", "Consider removing the vendor directory and using a package manager"},
+		{"node_modules", "node_modules/ found in repository", "Add node_modules/ to .gitignore"},
+	}
+	for _, v := range vendorDirs {
+		dirPath := filepath.Join(ctx.RepoPath, v.dir)
+		if info, err := os.Stat(dirPath); err == nil && info.IsDir() {
 			return model.CheckResult{
 				ID: c.ID(), Category: c.Category(), Name: c.Name(),
 				Status: model.StatusNone, Points: 0, MaxPoints: c.MaxPoints(),
-				Details:    "vendor/ directory found",
-				Suggestion: "Consider removing the vendor directory and using a package manager",
-			}
-		}
-		if strings.HasPrefix(f.Path, "node_modules/") {
-			return model.CheckResult{
-				ID: c.ID(), Category: c.Category(), Name: c.Name(),
-				Status: model.StatusNone, Points: 0, MaxPoints: c.MaxPoints(),
-				Details:    "node_modules/ found in repository",
-				Suggestion: "Add node_modules/ to .gitignore",
+				Details:    v.name,
+				Suggestion: v.suggestion,
 			}
 		}
 	}

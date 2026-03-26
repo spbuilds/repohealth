@@ -12,8 +12,8 @@ import (
 type FileConfig struct {
 	Version   int `yaml:"version"`
 	Threshold int `yaml:"threshold"`
-	// Weights allows overriding category scoring weights (planned for v0.5).
-	Weights map[string]int `yaml:"weights"`
+	// Weights allows overriding category scoring weights (not yet implemented).
+	Weights map[string]int `yaml:"weights,omitempty"`
 	Disable []string       `yaml:"disable"`
 	Exclude []string       `yaml:"exclude"`
 }

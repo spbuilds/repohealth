@@ -48,7 +48,7 @@ func NewRegistry() *Registry {
 		&CIRunsBuildCheck{},
 	)
 
-	// Dependency checks (DEP-01 to DEP-05)
+	// Dependency checks (DEP-01, DEP-02, DEP-03, DEP-05; DEP-04 deferred)
 	r.checks = append(r.checks,
 		&LockfileExistsCheck{},
 		&PackageManagerCheck{},
