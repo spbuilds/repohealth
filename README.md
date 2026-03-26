@@ -108,11 +108,21 @@ Every check that scores below full generates a specific, actionable suggestion s
 
 ## Installation
 
+**Go install** (requires Go 1.22+):
+
 ```bash
 go install github.com/spbuilds/repohealth/cmd/repohealth@latest
 ```
 
-Or build from source:
+**Download binary** from [GitHub Releases](https://github.com/spbuilds/repohealth/releases):
+
+```bash
+# macOS / Linux
+curl -sSL https://github.com/spbuilds/repohealth/releases/latest/download/repohealth_$(uname -s)_$(uname -m).tar.gz | tar xz
+sudo mv repohealth /usr/local/bin/
+```
+
+**Build from source:**
 
 ```bash
 git clone https://github.com/spbuilds/repohealth.git
@@ -140,6 +150,18 @@ repohealth . --score-only
 repohealth . --no-color
 ```
 
+## CI Integration
+
+Add RepoHealth to your GitHub Actions workflow:
+
+```yaml
+- name: Install RepoHealth
+  run: go install github.com/spbuilds/repohealth/cmd/repohealth@latest
+
+- name: Check repo health
+  run: repohealth . --score-only
+```
+
 ## Roadmap
 
 | Version | What's Included |
@@ -147,7 +169,7 @@ repohealth . --no-color
 | **v0.1** | 14 checks, terminal + JSON output, scoring engine |
 | **v0.2** | TODO scanning, lockfile detection, coverage config, CI content parsing |
 | **v0.3** | CI mode (`--threshold`), Markdown reports |
-| **v0.4** | GoReleaser, Homebrew tap |
+| **v0.4** | Homebrew tap |
 | **v0.5** | GitHub Action |
 | **v1.0** | Stable release, 33 checks across 8 categories |
 
