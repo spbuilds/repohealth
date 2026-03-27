@@ -10,7 +10,7 @@ RepoHealth analyzes a repository's documentation, tests, CI/CD configuration, an
 
 - **Deterministic** — same repo always produces the same score. No AI, no randomness.
 - **Zero-config** — works out of the box on any Git repository.
-- **Fast** — analyzes 58,000 files in under 300ms.
+- **Fast** — analyzes most repositories in under 3 seconds.
 - **Offline** — no network access, no API keys, no accounts.
 
 **What RepoHealth is NOT:**
@@ -28,11 +28,11 @@ RepoHealth measures *repository maturity and project hygiene*, not code quality.
 ```
 $ repohealth .
 
-  RepoHealth v0.1.1
+  RepoHealth v0.5.0
 
   Repository: /home/dev/my-project
   Languages:  Go (74%), Shell (18%), Dockerfile (8%)
-  Analyzed:   247 files in 15ms
+  Analyzed:   247 files in 45ms
 
   ──────────────────────────────────────────────
 
@@ -41,50 +41,88 @@ $ repohealth .
   ──────────────────────────────────────────────
 
   Documentation                           13 / 15
-    README.md                              ✓
-    LICENSE                                ✓
-    CONTRIBUTING.md                        ✗
-    CODE_OF_CONDUCT.md                     ✗
-    SECURITY.md                            ✓
-    CHANGELOG.md                           ✓
+    README exists                          ✓  README.md found
+    README has content                     ✓  README has substantive content with sections
+    LICENSE exists                         ✓  LICENSE found
+    CONTRIBUTING exists                    ✗
+    CODE_OF_CONDUCT exists                 ✗
+    SECURITY.md exists                     ✓  SECURITY.md found
+    CHANGELOG exists                       ✓  CHANGELOG.md found
 
-  Testing                                 14 / 14
-    Test files detected                    ✓  (42 files)
+  Testing                                 17 / 20
+    Test files detected                    ✓  42 test files
     Test directory                         ✓  tests/
-    Test framework configured              ✓  go test
+    Test framework configured              ✓  go test (built-in)
+    Coverage config exists                 ✗
+    Test-to-source ratio                   ✓  42 test files / 89 source files (47%)
 
-  CI/CD                                    6 / 6
-    CI configuration                       ✓  GitHub Actions
+  CI/CD                                   15 / 15
+    CI configuration exists                ✓  GitHub Actions
+    CI runs tests                          ✓  Test command found in CI
+    CI runs linter                         ✓  Linter found in CI
+    CI runs build                          ✓  Build command found in CI
 
-  Activity                                 6 / 8
-    Last commit                            ✓  2 days ago
+  Dependencies                             9 / 9
+    Lockfile exists                        ✓
+    Package manager detected               ✓
+    Lockfile freshness                     ✓
+    Dependency count                       ✓
+
+  Security                                 8 / 10
+    No secrets in repo                     ✓
+    .gitignore covers secrets              ✓
+    Dependency pinning                     ✓
+    Branch protection indicators           ✗
+
+  Code Statistics                          4 / 5
+    Source files exist                     ✓
+    Language diversity                     ✓
+    Comment ratio                          ◐
+    No vendor bloat                        ✓
+
+  Activity                                10 / 15
+    Recent commit                          ✓  today
+    Commit frequency                       ✓
     Contributors                           ◐  3
+    Release exists                         ✓
+    Bus factor                             ◐
+
+  TODO / Technical Debt                    5 / 7
+    TODO/FIXME count                       ◐
+    TODO density per KLOC                  ✓
+    No critical TODO markers               ✓
 
   ──────────────────────────────────────────────
 
   Suggestions (sorted by impact)
-    +3 pts  Add CONTRIBUTING.md
-    +2 pts  Improve contributor count (bus factor)
+    +3 pts  Add coverage configuration
+    +2 pts  Add a CODEOWNERS file or branch protection configuration
+    +2 pts  Add CONTRIBUTING.md
     +1 pt   Add CODE_OF_CONDUCT.md
+
+  ──────────────────────────────────────────────
+
+  Improvement Plan
+    78 → 81  Add coverage configuration
+    81 → 83  Add CODEOWNERS file
+    83 → 85  Add CONTRIBUTING.md
+    85 → 86  Add CODE_OF_CONDUCT.md
 ```
 
 ## Real Repository Scores
 
-Tested on well-known open-source projects:
+Tested on well-known open-source projects (v0.5.0, 33 checks):
 
-| Repository | Language | Score | Grade | Time |
-|------------|----------|-------|-------|------|
-| [axios](https://github.com/axios/axios) | JavaScript | 93 | A | 10ms |
-| [requests](https://github.com/psf/requests) | Python | 93 | A | 9ms |
-| [fastapi](https://github.com/tiangolo/fastapi) | Python | 88 | A- | 25ms |
-| [hono](https://github.com/honojs/hono) | TypeScript | 81 | B+ | 11ms |
-| [vscode](https://github.com/microsoft/vscode) | TypeScript | 79 | B | 91ms |
-| [rust](https://github.com/rust-lang/rust) | Rust | 79 | B | 255ms |
-| [kubernetes](https://github.com/kubernetes/kubernetes) | Go | 77 | B | 159ms |
-| [redis](https://github.com/redis/redis) | C | 65 | C+ | 15ms |
-| [express](https://github.com/expressjs/express) | JavaScript | 51 | D | 10ms |
+| Repository | Language | Score | Grade | Files | Time |
+|------------|----------|-------|-------|-------|------|
+| [gin](https://github.com/gin-gonic/gin) | Go | 77 | B | 130 | 75ms |
+| [cobra](https://github.com/spf13/cobra) | Go | 64 | C | 66 | 55ms |
+| [next.js](https://github.com/vercel/next.js) | JavaScript | 64 | C | 26,716 | 1.9s |
+| [django](https://github.com/django/django) | Python | 55 | C- | 6,942 | 580ms |
+| [rust](https://github.com/rust-lang/rust) | Rust | 56 | C- | 57,236 | 5.6s |
+| [kubernetes](https://github.com/kubernetes/kubernetes) | Go | 53 | D | 23,674 | 2.2s |
 
-Well-maintained libraries with complete docs and tests score highest. Large monorepos and older projects score lower due to non-standard CI and missing community files.
+Scores reflect all 8 categories: documentation, tests, CI/CD, dependencies, security, code statistics, activity, and TODO debt. Large monorepos score lower due to non-standard CI, missing community files, and high TODO counts.
 
 ## What It Checks
 
@@ -200,10 +238,11 @@ repohealth . --format html > report.html  # standalone HTML report
 | Version | What's Included | Status |
 |---------|----------------|--------|
 | **v0.1** | 14 checks, terminal + JSON output, scoring engine | Released |
-| **v0.2** | 33 checks across 8 categories, TODO scanning, deps, security, CI parsing | Released |
-| **v0.3** | HTML report, config file, CI auto-detection, improvement plan, `--threshold` | Released |
-| **v0.4** | Homebrew tap | Planned |
-| **v0.5** | GitHub Action | Planned |
+| **v0.2** | 33 checks across 8 categories, Markdown output, CI mode | Released |
+| **v0.3** | HTML report, config file, CI auto-detection, improvement plan | Released |
+| **v0.4** | Accuracy improvements, secret patterns, CI parsing, GitHub Action | Released |
+| **v0.5** | 51 reliability fixes, 99 tests, deterministic output, performance optimization | Released |
+| **v0.6** | Homebrew tap, custom scoring weights | Planned |
 | **v1.0** | Stable release, plugin system | Planned |
 
 ## Contributing
