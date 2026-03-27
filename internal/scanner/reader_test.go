@@ -10,7 +10,9 @@ import (
 func TestReadFileLines_Normal(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "test.txt")
-	os.WriteFile(path, []byte("line1\nline2\nline3\n"), 0644)
+	if err := os.WriteFile(path, []byte("line1\nline2\nline3\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	lines, err := ReadFileLines(dir, "test.txt")
 	if err != nil {
@@ -24,7 +26,9 @@ func TestReadFileLines_Normal(t *testing.T) {
 func TestReadFileLines_EmptyFile(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "empty.txt")
-	os.WriteFile(path, []byte(""), 0644)
+	if err := os.WriteFile(path, []byte(""), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	lines, err := ReadFileLines(dir, "empty.txt")
 	if err != nil {
@@ -43,7 +47,9 @@ func TestReadFileLines_BinaryFile(t *testing.T) {
 	path := filepath.Join(dir, "binary.bin")
 	data := make([]byte, 100)
 	data[50] = 0 // null byte = binary
-	os.WriteFile(path, data, 0644)
+	if err := os.WriteFile(path, data, 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	lines, err := ReadFileLines(dir, "binary.bin")
 	if err != nil {
@@ -59,7 +65,9 @@ func TestReadFileLines_LargeFile(t *testing.T) {
 	path := filepath.Join(dir, "large.txt")
 	// Create file > 100KB
 	data := strings.Repeat("x", 200*1024)
-	os.WriteFile(path, []byte(data), 0644)
+	if err := os.WriteFile(path, []byte(data), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	lines, err := ReadFileLines(dir, "large.txt")
 	if err != nil {

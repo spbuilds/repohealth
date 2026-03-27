@@ -200,7 +200,9 @@ func TestNoSecretsCheck_CleanRepo(t *testing.T) {
 		},
 	}
 	// Create a clean source file in temp dir
-	os.WriteFile(filepath.Join(ctx.RepoPath, "main.go"), []byte("package main\nfunc main() {}\n"), 0644)
+	if err := os.WriteFile(filepath.Join(ctx.RepoPath, "main.go"), []byte("package main\nfunc main() {}\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	check := &NoSecretsCheck{}
 	result := check.Run(ctx)

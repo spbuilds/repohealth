@@ -19,7 +19,9 @@ func TestLoadConfig_NoFile(t *testing.T) {
 func TestLoadConfig_ValidFile(t *testing.T) {
 	dir := t.TempDir()
 	content := []byte("version: 1\nthreshold: 75\ndisable:\n  - STAT-03\nexclude:\n  - vendor/\n")
-	os.WriteFile(filepath.Join(dir, ".repohealthrc.yaml"), content, 0644)
+	if err := os.WriteFile(filepath.Join(dir, ".repohealthrc.yaml"), content, 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	cfg, err := LoadConfig(dir, "")
 	if err != nil {
@@ -41,7 +43,9 @@ func TestLoadConfig_ValidFile(t *testing.T) {
 
 func TestLoadConfig_InvalidYAML(t *testing.T) {
 	dir := t.TempDir()
-	os.WriteFile(filepath.Join(dir, ".repohealthrc.yaml"), []byte("{{invalid"), 0644)
+	if err := os.WriteFile(filepath.Join(dir, ".repohealthrc.yaml"), []byte("{{invalid"), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	_, err := LoadConfig(dir, "")
 	if err == nil {
@@ -52,7 +56,9 @@ func TestLoadConfig_InvalidYAML(t *testing.T) {
 func TestLoadConfig_ExplicitPath(t *testing.T) {
 	dir := t.TempDir()
 	customPath := filepath.Join(dir, "custom.yaml")
-	os.WriteFile(customPath, []byte("threshold: 80\n"), 0644)
+	if err := os.WriteFile(customPath, []byte("threshold: 80\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	cfg, err := LoadConfig(dir, customPath)
 	if err != nil {
@@ -72,13 +78,14 @@ func TestLoadConfig_ExplicitPathNotFound(t *testing.T) {
 
 func TestLoadConfig_EmptyFile(t *testing.T) {
 	dir := t.TempDir()
-	os.WriteFile(filepath.Join(dir, ".repohealthrc.yaml"), []byte(""), 0644)
+	if err := os.WriteFile(filepath.Join(dir, ".repohealthrc.yaml"), []byte(""), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	cfg, err := LoadConfig(dir, "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	// Empty YAML unmarshals to zero-value struct, not nil
 	if cfg == nil {
 		t.Error("expected non-nil config for empty file")
 	}
