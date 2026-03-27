@@ -1,3 +1,4 @@
+// Package scoring computes composite health scores and grades from check results.
 package scoring
 
 import (

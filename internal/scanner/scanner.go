@@ -1,3 +1,4 @@
+// Package scanner walks repository directories, detects languages, and collects file metadata.
 package scanner
 
 import (

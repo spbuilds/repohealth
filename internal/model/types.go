@@ -1,3 +1,4 @@
+// Package model defines the core data types used across RepoHealth.
 package model
 
 // Status represents the assessment level of a check.

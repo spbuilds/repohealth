@@ -1,3 +1,4 @@
+// Package report renders health reports in terminal, JSON, Markdown, and HTML formats.
 package report
 
 import (

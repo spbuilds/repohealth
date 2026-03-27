@@ -1,3 +1,4 @@
+// Package config handles loading and parsing of RepoHealth configuration files.
 package config
 
 import (

@@ -1,3 +1,4 @@
+// Package checks implements the health check modules for RepoHealth.
 package checks
 
 import "github.com/spbuilds/repohealth/internal/model"

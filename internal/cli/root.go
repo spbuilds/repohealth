@@ -1,3 +1,4 @@
+// Package cli implements the command-line interface for RepoHealth.
 package cli
 
 import (
