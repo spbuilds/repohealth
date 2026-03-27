@@ -10,6 +10,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/spbuilds/repohealth/internal/checks"
 	"github.com/spbuilds/repohealth/internal/config"
+	"github.com/spbuilds/repohealth/internal/model"
 	"github.com/spbuilds/repohealth/internal/report"
 	"github.com/spbuilds/repohealth/internal/scanner"
 	"github.com/spbuilds/repohealth/internal/scoring"
@@ -62,43 +63,63 @@ func Execute() {
 
 func run(cmd *cobra.Command, args []string) error {
 	startTime := time.Now()
+	configureColors()
 
-	if noColor || os.Getenv("NO_COLOR") != "" || os.Getenv("CI") == "true" || os.Getenv("GITHUB_ACTIONS") == "true" {
-		color.NoColor = true
-	}
-
-	repoPath := "."
-	if len(args) > 0 {
-		repoPath = args[0]
-	}
-
+	repoPath := resolveRepoPath(args)
 	if _, err := os.Stat(repoPath); os.IsNotExist(err) {
 		return fmt.Errorf("path does not exist: %s", repoPath)
 	}
 
-	// Load config
 	fileCfg, err := config.LoadConfig(repoPath, configPath)
 	if err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 
-	// Determine excludes from config
+	r, err := analyze(repoPath, fileCfg, startTime)
+	if err != nil {
+		return err
+	}
+
+	applyConfigThreshold(cmd, fileCfg)
+
+	if err := renderOutput(r); err != nil {
+		return err
+	}
+
+	if ciMode && r.Score < threshold {
+		os.Exit(2)
+	}
+	return nil
+}
+
+func configureColors() {
+	if noColor || os.Getenv("NO_COLOR") != "" || os.Getenv("CI") == "true" || os.Getenv("GITHUB_ACTIONS") == "true" {
+		color.NoColor = true
+	}
+}
+
+func resolveRepoPath(args []string) string {
+	if len(args) > 0 {
+		return args[0]
+	}
+	return "."
+}
+
+func analyze(repoPath string, fileCfg *config.FileConfig, startTime time.Time) (*model.Report, error) {
 	var excludes []string
 	if fileCfg != nil && len(fileCfg.Exclude) > 0 {
 		excludes = fileCfg.Exclude
 	}
 
-	ctx, scanErr := scanner.Scan(repoPath, excludes)
-	if scanErr != nil {
-		return fmt.Errorf("failed to scan repository: %w", scanErr)
+	ctx, err := scanner.Scan(repoPath, excludes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to scan repository: %w", err)
 	}
 	if ctx.Truncated {
 		fmt.Fprintf(os.Stderr, "Warning: scan truncated at %d files. Results may be incomplete.\n", len(ctx.Files))
 	}
 
 	registry := checks.NewRegistry()
-
-	// Filter checks if config disables any
 	var activeChecks []checks.Check
 	if fileCfg != nil && len(fileCfg.Disable) > 0 {
 		activeChecks = registry.Filter(nil, fileCfg.Disable)
@@ -107,7 +128,6 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	results := checks.Run(activeChecks, ctx)
-
 	r := scoring.Score(results, ctx.RepoPath, ctx.Languages, len(ctx.Files), startTime)
 	r.Version = Version
 
@@ -115,11 +135,16 @@ func run(cmd *cobra.Command, args []string) error {
 		fmt.Fprintf(os.Stderr, "Warning: analysis took %.1fs (target: <3s). Consider adding excludes to .repohealthrc.yaml\n", elapsed.Seconds())
 	}
 
-	// Use config threshold if --threshold not explicitly set
+	return r, nil
+}
+
+func applyConfigThreshold(cmd *cobra.Command, fileCfg *config.FileConfig) {
 	if fileCfg != nil && fileCfg.Threshold > 0 && !cmd.Flags().Changed("threshold") {
 		threshold = fileCfg.Threshold
 	}
+}
 
+func renderOutput(r *model.Report) error {
 	if scoreOnly {
 		fmt.Fprintf(os.Stdout, "%d/%d (%s)\n", r.Score, r.MaxScore, r.Grade)
 		if ciMode && r.Score < threshold {
@@ -130,9 +155,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 	switch format {
 	case "json":
-		if err := report.JSON(os.Stdout, r); err != nil {
-			return err
-		}
+		return report.JSON(os.Stdout, r)
 	case "markdown":
 		report.Markdown(os.Stdout, r)
 	case "html":
@@ -142,10 +165,5 @@ func run(cmd *cobra.Command, args []string) error {
 	default:
 		return fmt.Errorf("unknown format: %s", format)
 	}
-
-	if ciMode && r.Score < threshold {
-		os.Exit(2)
-	}
-
 	return nil
 }
