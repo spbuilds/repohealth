@@ -3,6 +3,7 @@
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Go](https://img.shields.io/badge/go-1.22+-00ADD8.svg)](https://go.dev)
 [![CI](https://github.com/spbuilds/repohealth/actions/workflows/ci.yml/badge.svg)](https://github.com/spbuilds/repohealth/actions/workflows/ci.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/spbuilds/repohealth)](https://goreportcard.com/report/github.com/spbuilds/repohealth)
 
 **A Lighthouse-style health check for Git repositories.**
 
