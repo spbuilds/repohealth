@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.2] - 2026-03-29
+
+### Fixed
+- CI-02: `npm run test`, `pnpm run test`, `yarn run test`, `bun run test` now detected as test commands
+- SEC-02: Environment-specific files (`.env.production`, `.env.local`, `.env.development`, `.env.staging`, `.env.test`) excluded from secret detection
+- SEC-02: Secret pattern scanning skips test files (`*_test.go`, `*.spec.ts`, etc.) and `testdata/`/`fixtures/` directories
+- STAT-04: Vendor bloat check reads `.gitignore` before penalizing `node_modules`/`vendor` on disk
+
+### Added
+- Demo GIF in README
+
 ## [0.5.0] - 2026-03-27
 
 ### Fixed

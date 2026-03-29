@@ -9,6 +9,8 @@
 
 RepoHealth analyzes a repository's documentation, tests, CI/CD configuration, and maintenance activity to produce a composite health score (0-100) with actionable improvement recommendations. One command, one report, one score.
 
+![RepoHealth Demo](demo-full.gif)
+
 - **Deterministic** — same repo always produces the same score. No AI, no randomness.
 - **Zero-config** — works out of the box on any Git repository.
 - **Fast** — analyzes most repositories in under 3 seconds.
