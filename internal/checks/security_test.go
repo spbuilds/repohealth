@@ -232,8 +232,8 @@ func TestNoSecretsCheck_EnvLocal(t *testing.T) {
 	}
 	check := &NoSecretsCheck{}
 	result := check.Run(ctx)
-	if result.Status != model.StatusNone {
-		t.Errorf("Status = %v, want None for .env.local", result.Status)
+	if result.Status != model.StatusFull {
+		t.Errorf("Status = %v, want Full for .env.local (environment-specific config, allowed)", result.Status)
 	}
 }
 

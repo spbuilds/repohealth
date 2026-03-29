@@ -40,8 +40,10 @@ func (c *NoSecretsCheck) Run(ctx *model.ScanContext) model.CheckResult {
 		}
 		base := filepath.Base(f.Path)
 		if base == ".env" || strings.HasPrefix(base, ".env.") {
-			// Skip .env.example and .env.sample
-			if base != ".env.example" && base != ".env.sample" && base != ".env.template" {
+			// Skip .env.example, .env.sample, .env.template, and environment-specific configs
+			if base != ".env.example" && base != ".env.sample" && base != ".env.template" &&
+				base != ".env.production" && base != ".env.development" && base != ".env.staging" &&
+				base != ".env.local" && base != ".env.test" {
 				return model.CheckResult{
 					ID: c.ID(), Category: c.Category(), Name: c.Name(),
 					Status: model.StatusNone, Points: 0, MaxPoints: c.MaxPoints(),
@@ -52,9 +54,12 @@ func (c *NoSecretsCheck) Run(ctx *model.ScanContext) model.CheckResult {
 		}
 	}
 
-	// Scan source files for secret patterns
+	// Scan source files for secret patterns (skip test files and testdata)
 	for _, f := range ctx.Files {
 		if f.IsDir {
+			continue
+		}
+		if isTestFile(f.Name) || isTestDataPath(f.Path) {
 			continue
 		}
 		ext := strings.ToLower(filepath.Ext(f.Name))
@@ -195,4 +200,10 @@ func (c *BranchProtectionCheck) Run(ctx *model.ScanContext) model.CheckResult {
 		Details:    "No branch protection indicators found",
 		Suggestion: "Add a CODEOWNERS file or branch protection configuration",
 	}
+}
+
+// isTestDataPath returns true if the file is under a testdata/ or fixtures/ directory.
+func isTestDataPath(path string) bool {
+	return strings.HasPrefix(path, "testdata/") || strings.Contains(path, "/testdata/") ||
+		strings.HasPrefix(path, "fixtures/") || strings.Contains(path, "/fixtures/")
 }

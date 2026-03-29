@@ -169,7 +169,8 @@ func (c *CIRunsTestsCheck) Run(ctx *model.ScanContext) model.CheckResult {
 
 	lines := getCIConfigLines(ctx)
 	testPatterns := []string{
-		"npm test", "pnpm test", "yarn test", "bun test",
+		"npm test", "npm run test", "pnpm test", "pnpm run test",
+		"yarn test", "yarn run test", "bun test", "bun run test",
 		"vitest", "jest", "mocha", "ava",
 		"pytest", "python -m pytest", "tox",
 		"go test", "gotestsum",
