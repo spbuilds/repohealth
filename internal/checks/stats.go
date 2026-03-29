@@ -234,6 +234,8 @@ func (c *NoVendorBloatCheck) MaxPoints() int   { return 1 }
 func (c *NoVendorBloatCheck) Run(ctx *model.ScanContext) model.CheckResult {
 	// Check for vendor/node_modules directories via os.Stat since scanner
 	// skips these dirs (they're in skipDirs) so ctx.Files won't contain them.
+	// Only penalize if the directory exists AND is not already in .gitignore.
+	gitignorePatterns := readGitignorePatterns(ctx)
 	vendorDirs := []struct{ dir, name, suggestion string }{
 		{"vendor", "vendor/ directory found", "Consider removing the vendor directory and using a package manager"},
 		{"node_modules", "node_modules/ found in repository", "Add node_modules/ to .gitignore"},
@@ -241,6 +243,9 @@ func (c *NoVendorBloatCheck) Run(ctx *model.ScanContext) model.CheckResult {
 	for _, v := range vendorDirs {
 		dirPath := filepath.Join(ctx.RepoPath, v.dir)
 		if info, err := os.Stat(dirPath); err == nil && info.IsDir() {
+			if isInGitignore(gitignorePatterns, v.dir) {
+				continue
+			}
 			return model.CheckResult{
 				ID: c.ID(), Category: c.Category(), Name: c.Name(),
 				Status: model.StatusNone, Points: 0, MaxPoints: c.MaxPoints(),
@@ -254,4 +259,32 @@ func (c *NoVendorBloatCheck) Run(ctx *model.ScanContext) model.CheckResult {
 		Status: model.StatusFull, Points: c.MaxPoints(), MaxPoints: c.MaxPoints(),
 		Details: "No vendor bloat detected",
 	}
+}
+
+// readGitignorePatterns reads .gitignore and returns all non-comment, non-empty lines.
+func readGitignorePatterns(ctx *model.ScanContext) []string {
+	lines, err := scanner.ReadFileLines(ctx.RepoPath, ".gitignore")
+	if err != nil {
+		return nil
+	}
+	var patterns []string
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line != "" && !strings.HasPrefix(line, "#") {
+			patterns = append(patterns, line)
+		}
+	}
+	return patterns
+}
+
+// isInGitignore checks if a directory name is covered by any .gitignore pattern.
+func isInGitignore(patterns []string, dir string) bool {
+	for _, p := range patterns {
+		p = strings.TrimSuffix(p, "/")
+		p = strings.TrimPrefix(p, "/")
+		if p == dir {
+			return true
+		}
+	}
+	return false
 }
