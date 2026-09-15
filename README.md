@@ -11,7 +11,7 @@ RepoHealth analyzes a repository's documentation, tests, CI/CD configuration, an
 
 ![RepoHealth Demo](demo-full.gif)
 
-- **Deterministic** — same repo always produces the same score. No AI, no randomness.
+- **Deterministic** — reproducible scoring for the same repository state and evaluation date. No AI, no randomness.
 - **Zero-config** — works out of the box on any Git repository.
 - **Fast** — analyzes most repositories in under 3 seconds.
 - **Offline** — no network access, no API keys, no accounts.

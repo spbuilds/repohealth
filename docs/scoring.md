@@ -92,4 +92,4 @@ A disabled check does not run and does not appear in the report. Its points are 
 
 ## Determinism
 
-Given the same working tree and git history, RepoHealth produces the same score: checks run in a fixed order, suggestions use a stable sort, comment-ratio sampling is path-ordered, and no network input is used. Checks that compare dates against the current date — ACT-01 (Recent commit), ACT-02 (Commit frequency) and DEP-03 (Lockfile freshness) — can change as time passes.
+Scoring has no random input. Given the same working tree, git history and evaluation date, RepoHealth produces the same score: checks run in a fixed order, suggestions use a stable sort, comment-ratio sampling is path-ordered, and no network input is used. The three checks that compare dates against the evaluation date — ACT-01 (Recent commit), ACT-02 (Commit frequency) and DEP-03 (Lockfile freshness) — can change as time passes; DEP-03 also falls back to the lockfile's modification time when it has no git history.
