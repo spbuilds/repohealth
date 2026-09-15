@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.3] - Unreleased
+
+### Fixed
+- Source-language coverage: every language the scanner recognises is now included in the secret scan (SEC-02), source-file statistics (STAT-01), test-to-source ratio (TST-05) and TODO scan (TODO-01 to TODO-03). Previously `.tsx`, `.jsx`, `.cs`, `.dart`, `.ex`, `.exs`, `.lua`, `.r`, `.sql`, `.html`, `.css`, `.scss`, `.bash` and `.zsh` files were skipped by these checks
+- TODO detection: `TODO`, `FIXME`, `HACK` and `XXX` are counted only as whole words following a comment opener valid for the file's language; openers inside single-line string literals are ignored. Marker text in code, single-line string literals, URLs and identifiers no longer counts
+- Test-file recognition now covers C# (`*Test.cs`, `*Tests.cs`), Dart (`*_test.dart`), Elixir (`*_test.exs`), Lua (`*_test.lua`, `*_spec.lua`) and R (`test-*.R`, `test_*.R`); these files count for TST-01 and TST-05 and are excluded from the secret scan and source-file counts like other languages' test files
+- Scanner: a repository path that is a symlink is resolved before scanning. Previously it scanned as an empty repository
+
+### Changed
+- STAT-03 (comment ratio) and TST-05 (test-to-source ratio) measure programming-language files only; markup and stylesheets (`.html`, `.css`, `.scss`) still count as source files for STAT-01 and are still secret- and TODO-scanned
+- The repository path shown in reports (`repo_path` in JSON output) is the symlink-resolved path
+- Documentation synchronized with current behaviour: `docs/checks.md`, `docs/scoring.md` and `examples/report.json` regenerated for the 36-check, 8-category model; stale check-count claims corrected in the README and changelog; the `weights` configuration key is documented as reserved and not currently applied
+
 ## [0.5.2] - 2026-03-29
 
 ### Fixed
@@ -19,7 +32,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.5.0] - 2026-03-27
 
 ### Fixed
-- 51 fixes from 5 rounds of reliability engineering
 - Scoring engine: category score capped at max after rounding (prevented >100% per category)
 - Scoring engine: improvement plan normalizes impact by RawMax (was mixing raw points with percentages)
 - Bus factor: uses float64 threshold (was inflated for small repos via integer division)
@@ -89,7 +101,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.0] - 2026-03-26
 
 ### Added
-- 19 new checks across 4 new categories (33 total, 8 categories)
+- 23 new checks and 4 new categories (36 total, 8 categories)
 - **Dependencies:** lockfile, package manager, freshness, dependency count
 - **Security:** secret scanning, .gitignore coverage, dependency pinning, branch protection
 - **Code Statistics:** source files, language diversity, comment ratio, vendor bloat
@@ -127,6 +139,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Initial release
-- 14 checks across 4 categories (documentation, testing, CI/CD, activity)
+- 13 checks across 4 categories (documentation, testing, CI/CD, activity)
 - Composite scoring engine (0-100) with A+ through F grading
 - Colored terminal report with actionable recommendations
