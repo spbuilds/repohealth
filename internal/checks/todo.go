@@ -3,6 +3,7 @@ package checks
 import (
 	"fmt"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -48,9 +49,10 @@ func doTodoScan(ctx *model.ScanContext) todoStats {
 			continue
 		}
 		ext := strings.ToLower(filepath.Ext(f.Name))
-		if !sourceExtensions[ext] {
+		if !scanner.IsSourceExt(ext) {
 			continue
 		}
+		openers := openersFor(ext)
 
 		lines, err := scanner.ReadFileLines(ctx.RepoPath, f.Path)
 		if err != nil || lines == nil {
@@ -60,20 +62,103 @@ func doTodoScan(ctx *model.ScanContext) todoStats {
 		stats.totalLOC += len(lines)
 		for _, line := range lines {
 			upper := strings.ToUpper(line)
-			if strings.Contains(upper, "TODO") ||
-				strings.Contains(upper, "FIXME") ||
-				strings.Contains(upper, "HACK") ||
-				strings.Contains(upper, "XXX") {
-				stats.count++
-				if strings.Contains(upper, "SECURITY") ||
-					strings.Contains(upper, "VULNERABILITY") ||
-					strings.Contains(upper, "UNSAFE") {
-					stats.critical = true
-				}
+			if !strings.Contains(upper, "TODO") && !strings.Contains(upper, "FIXME") &&
+				!strings.Contains(upper, "HACK") && !strings.Contains(upper, "XXX") {
+				continue // fast path: no marker text anywhere on the line
+			}
+			body := commentBody(upper, openers)
+			if body == "" || !todoMarkerRe.MatchString(body) {
+				continue
+			}
+			stats.count++
+			if criticalMarkerRe.MatchString(body) {
+				stats.critical = true
 			}
 		}
 	}
 	return stats
+}
+
+var (
+	todoMarkerRe     = regexp.MustCompile(`\b(TODO|FIXME|HACK|XXX)\b`)
+	criticalMarkerRe = regexp.MustCompile(`\b(SECURITY|VULNERABILITY|UNSAFE)\b`)
+
+	cStyleOpeners = []string{"//", "/*"}
+	hashOpeners   = []string{"#"}
+
+	// commentOpeners lists the comment openers of each source language. A
+	// marker is only counted when it follows one of its language's openers.
+	commentOpeners = map[string][]string{
+		".go": cStyleOpeners, ".js": cStyleOpeners, ".jsx": cStyleOpeners,
+		".ts": cStyleOpeners, ".tsx": cStyleOpeners, ".java": cStyleOpeners,
+		".c": cStyleOpeners, ".cpp": cStyleOpeners, ".h": cStyleOpeners,
+		".cs": cStyleOpeners, ".swift": cStyleOpeners, ".kt": cStyleOpeners,
+		".rs": cStyleOpeners, ".dart": cStyleOpeners, ".scss": cStyleOpeners,
+		".php": {"//", "/*", "#"},
+		".py":  hashOpeners, ".rb": hashOpeners, ".sh": hashOpeners, ".bash": hashOpeners,
+		".zsh": hashOpeners, ".r": hashOpeners, ".ex": hashOpeners, ".exs": hashOpeners,
+		".sql":  {"--", "/*"},
+		".lua":  {"--"},
+		".html": {"<!--"},
+		".css":  {"/*"},
+	}
+
+	// defaultOpeners applies to a source extension missing from the table, so a
+	// newly added language is over-counted rather than silently skipped.
+	defaultOpeners = []string{"//", "/*", "#"}
+)
+
+func openersFor(ext string) []string {
+	if o, ok := commentOpeners[ext]; ok {
+		return o
+	}
+	return defaultOpeners
+}
+
+// commentBody returns the text after the first comment opener that is not
+// inside a single-line string literal ("…", '…', `…`; backslash escapes
+// honoured), or "" when the line has no such opener. "://" is never an
+// opener. In languages with /* */ comments a line whose first non-blank
+// character is "*" is treated as a block-comment continuation. String
+// literals spanning multiple lines are not tracked.
+func commentBody(line string, openers []string) string {
+	hasBlock := false
+	for _, tok := range openers {
+		if tok == "/*" {
+			hasBlock = true
+		}
+	}
+	var quote byte
+	for i := 0; i < len(line); i++ {
+		c := line[i]
+		if quote != 0 {
+			if c == '\\' {
+				i++ // skip the escaped character
+			} else if c == quote {
+				quote = 0
+			}
+			continue
+		}
+		if c == '"' || c == '\'' || c == '`' {
+			quote = c
+			continue
+		}
+		for _, tok := range openers {
+			if !strings.HasPrefix(line[i:], tok) {
+				continue
+			}
+			if tok == "//" && i > 0 && line[i-1] == ':' {
+				continue // "://" in an unquoted URL
+			}
+			return line[i+len(tok):]
+		}
+	}
+	if hasBlock {
+		if trimmed := strings.TrimLeft(line, " \t"); strings.HasPrefix(trimmed, "*") {
+			return trimmed[1:]
+		}
+	}
+	return ""
 }
 
 // TODO-01: TODO/FIXME count
