@@ -28,6 +28,8 @@ RepoHealth measures *repository maturity and project hygiene*, not code quality.
 
 ## Example Output
 
+Sample output from `repohealth .` on a checkout of this repository on 2026-09-15. Timings vary by machine, and the activity and lockfile-freshness checks compare git dates with the current date, so a later run can change those lines and the overall score.
+
 ```
 $ repohealth .
 
