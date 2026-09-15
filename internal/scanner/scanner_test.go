@@ -122,3 +122,21 @@ func TestIsCodeLanguage(t *testing.T) {
 		}
 	}
 }
+
+func TestScanSymlinkedRoot(t *testing.T) {
+	real := t.TempDir()
+	if err := os.WriteFile(filepath.Join(real, "main.go"), []byte("package main\n"), 0644); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	link := filepath.Join(t.TempDir(), "repo-link")
+	if err := os.Symlink(real, link); err != nil {
+		t.Skipf("symlinks not supported here: %v", err)
+	}
+	ctx, err := Scan(link, nil)
+	if err != nil {
+		t.Fatalf("Scan() error = %v", err)
+	}
+	if len(ctx.Files) != 1 || ctx.Files[0].Name != "main.go" {
+		t.Errorf("expected exactly main.go via symlinked root, got %+v", ctx.Files)
+	}
+}

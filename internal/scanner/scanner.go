@@ -110,6 +110,12 @@ func Scan(repoPath string, excludes []string) (*model.ScanContext, error) {
 		return nil, err
 	}
 
+	// filepath.Walk does not follow a symlink at the root, so resolve it first.
+	absPath, err = filepath.EvalSymlinks(absPath)
+	if err != nil {
+		return nil, err
+	}
+
 	info, err := os.Stat(absPath)
 	if err != nil {
 		return nil, err
