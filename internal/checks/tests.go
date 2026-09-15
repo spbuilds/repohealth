@@ -8,6 +8,23 @@ import (
 	"github.com/spbuilds/repohealth/internal/scanner"
 )
 
+// testFilePatterns are the file-name conventions counted as test files by
+// TST-01 and TST-05. Patterns are case-sensitive with a single wildcard.
+var testFilePatterns = []string{
+	"*_test.go",
+	"*_test.py", "test_*.py",
+	"*.test.ts", "*.test.js", "*.test.tsx", "*.test.jsx",
+	"*.spec.ts", "*.spec.js", "*.spec.tsx", "*.spec.jsx",
+	"*_test.rs",
+	"*_test.rb",
+	"*Test.java", "*Tests.java",
+	"*Test.cs", "*Tests.cs",
+	"*_test.dart",
+	"*_test.exs",
+	"*_test.lua", "*_spec.lua",
+	"test-*.R", "test_*.R", "test-*.r", "test_*.r",
+}
+
 // TST-01: Test files exist
 type TestFilesExistCheck struct{}
 
@@ -17,15 +34,7 @@ func (c *TestFilesExistCheck) Name() string     { return "Test files detected" }
 func (c *TestFilesExistCheck) MaxPoints() int   { return 8 }
 
 func (c *TestFilesExistCheck) Run(ctx *model.ScanContext) model.CheckResult {
-	count := ctx.CountFilesMatching(
-		"*_test.go",
-		"*_test.py", "test_*.py",
-		"*.test.ts", "*.test.js", "*.test.tsx", "*.test.jsx",
-		"*.spec.ts", "*.spec.js", "*.spec.tsx", "*.spec.jsx",
-		"*_test.rs",
-		"*_test.rb",
-		"*Test.java", "*Tests.java",
-	)
+	count := ctx.CountFilesMatching(testFilePatterns...)
 
 	if count > 0 {
 		detail := fmt.Sprintf("%d test files", count)
@@ -204,21 +213,11 @@ func (c *TestToSourceRatioCheck) Name() string     { return "Test-to-source rati
 func (c *TestToSourceRatioCheck) MaxPoints() int   { return 3 }
 
 func (c *TestToSourceRatioCheck) Run(ctx *model.ScanContext) model.CheckResult {
-	testPatterns := []string{
-		"*_test.go",
-		"*_test.py", "test_*.py",
-		"*.test.ts", "*.test.js", "*.test.tsx", "*.test.jsx",
-		"*.spec.ts", "*.spec.js", "*.spec.tsx", "*.spec.jsx",
-		"*_test.rs",
-		"*_test.rb",
-		"*Test.java", "*Tests.java",
-	}
-
-	testCount := ctx.CountFilesMatching(testPatterns...)
+	testCount := ctx.CountFilesMatching(testFilePatterns...)
 
 	sourceCount := 0
 	for _, f := range ctx.Files {
-		if isSourceFile(f) {
+		if isProgramFile(f) {
 			sourceCount++
 		}
 	}

@@ -14,12 +14,19 @@ import (
 // isTestFile returns true if the file name indicates a test file.
 func isTestFile(name string) bool {
 	lower := strings.ToLower(name)
-	// Go: *_test.go, Rust: *_test.rs, Ruby: *_test.rb
-	if strings.HasSuffix(lower, "_test.go") || strings.HasSuffix(lower, "_test.rs") || strings.HasSuffix(lower, "_test.rb") {
+	// Go: *_test.go, Rust: *_test.rs, Ruby: *_test.rb, Dart: *_test.dart,
+	// Elixir: *_test.exs, Lua: *_test.lua or *_spec.lua
+	if strings.HasSuffix(lower, "_test.go") || strings.HasSuffix(lower, "_test.rs") || strings.HasSuffix(lower, "_test.rb") ||
+		strings.HasSuffix(lower, "_test.dart") || strings.HasSuffix(lower, "_test.exs") ||
+		strings.HasSuffix(lower, "_test.lua") || strings.HasSuffix(lower, "_spec.lua") {
 		return true
 	}
 	// Python: test_*.py (prefix only)
 	if strings.HasPrefix(lower, "test_") && strings.HasSuffix(lower, ".py") {
+		return true
+	}
+	// R (testthat): test-*.R or test_*.R
+	if (strings.HasPrefix(lower, "test-") || strings.HasPrefix(lower, "test_")) && strings.HasSuffix(lower, ".r") {
 		return true
 	}
 	// JS/TS: *.test.* or *.spec.*
@@ -28,6 +35,10 @@ func isTestFile(name string) bool {
 	}
 	// Java: *Test.java or *Tests.java
 	if strings.HasSuffix(lower, "test.java") || strings.HasSuffix(lower, "tests.java") {
+		return true
+	}
+	// C#: *Test.cs or *Tests.cs (case-sensitive, so "latest.cs" is not a test)
+	if strings.HasSuffix(name, "Test.cs") || strings.HasSuffix(name, "Tests.cs") {
 		return true
 	}
 	return false
@@ -44,6 +55,21 @@ func isSourceFile(f model.FileInfo) bool {
 	}
 	ext := strings.ToLower(f.Name[dot:])
 	return scanner.IsSourceExt(ext) && !isTestFile(f.Name)
+}
+
+// markupExtensions are source languages that are markup or styling rather
+// than program code. They count as source files but are left out of the
+// checks that measure programming-language files (comment ratio, test ratio).
+var markupExtensions = map[string]bool{".html": true, ".css": true, ".scss": true}
+
+// isProgramFile returns true if the file is a non-test source file in a
+// programming language (markup and stylesheets excluded).
+func isProgramFile(f model.FileInfo) bool {
+	if !isSourceFile(f) {
+		return false
+	}
+	dot := strings.LastIndex(f.Name, ".")
+	return !markupExtensions[strings.ToLower(f.Name[dot:])]
 }
 
 // STAT-01: Source files exist
@@ -134,7 +160,7 @@ func (c *CommentRatioCheck) MaxPoints() int   { return 2 }
 func (c *CommentRatioCheck) Run(ctx *model.ScanContext) model.CheckResult {
 	var sourceFiles []model.FileInfo
 	for _, f := range ctx.Files {
-		if isSourceFile(f) {
+		if isProgramFile(f) {
 			sourceFiles = append(sourceFiles, f)
 		}
 	}

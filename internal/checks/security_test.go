@@ -284,3 +284,14 @@ func TestNoSecretsCheck_None_AWSKeyInCSharp(t *testing.T) {
 		t.Errorf("Status = %v, want None (AWS key in .cs must be detected)", result.Status)
 	}
 }
+
+func TestNoSecretsCheck_Full_CSharpTestFile(t *testing.T) {
+	dir := makeTempRepo(t, map[string]string{
+		"tests/LoginTests.cs": "var password = \"Password123!\";\n",
+	})
+	ctx := &model.ScanContext{RepoPath: dir, Files: fileInfos("tests/LoginTests.cs")}
+	result := (&NoSecretsCheck{}).Run(ctx)
+	if result.Status != model.StatusFull {
+		t.Errorf("Status = %v, want Full (test files are excluded from the secret scan)", result.Status)
+	}
+}
