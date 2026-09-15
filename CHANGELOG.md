@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Source-language coverage: every language the scanner recognises is now included in the secret scan (SEC-02), source-file statistics (STAT-01), test-to-source ratio (TST-05) and TODO scan (TODO-01 to TODO-03). Previously `.tsx`, `.jsx`, `.cs`, `.dart`, `.ex`, `.exs`, `.lua`, `.r`, `.sql`, `.html`, `.css`, `.scss`, `.bash` and `.zsh` files were skipped by these checks
 - TODO detection: `TODO`, `FIXME`, `HACK` and `XXX` are counted only as whole words following a comment opener valid for the file's language; openers inside single-line string literals are ignored. Marker text in code, single-line string literals, URLs and identifiers no longer counts
-- Test-file recognition now covers C# (`*Test.cs`, `*Tests.cs`), Dart (`*_test.dart`), Elixir (`*_test.exs`), Lua (`*_test.lua`, `*_spec.lua`) and R (`test-*.R`, `test_*.R`); these files count for TST-01 and TST-05 and are excluded from the secret scan and source-file counts like other languages' test files
+- Test-file recognition now covers C# (`*Test.cs`, `*Tests.cs`), Dart (`*_test.dart`), Elixir (`*_test.exs`), Lua (`*_test.lua`, `*_spec.lua`) and R (`test-*.R`, `test_*.R`, also with a lower-case `.r` extension); these files count for TST-01 and TST-05 and are excluded from the secret scan and source-file counts like other languages' test files
 - Scanner: a repository path that is a symlink is resolved before scanning. Previously it scanned as an empty repository
 
 ### Changed

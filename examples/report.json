@@ -321,7 +321,7 @@
       "points": 0,
       "max_points": 2,
       "details": "0% comment ratio",
-      "suggestion": "Add comments to explain non-obvious code (currently <5%)"
+      "suggestion": "Add comments to explain non-obvious code (currently \u003c5%)"
     },
     {
       "id": "STAT-04",
@@ -468,7 +468,7 @@
     {
       "check_id": "STAT-03",
       "impact": 2,
-      "message": "Add comments to explain non-obvious code (currently <5%)"
+      "message": "Add comments to explain non-obvious code (currently \u003c5%)"
     }
   ],
   "languages": {
