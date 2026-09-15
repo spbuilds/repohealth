@@ -108,3 +108,16 @@ func TestIsSourceFile(t *testing.T) {
 		}
 	}
 }
+
+func TestIsSourceFile_Extensions(t *testing.T) {
+	for _, name := range []string{"App.tsx", "index.jsx", "Program.cs", "main.dart", "query.sql"} {
+		if !isSourceFile(model.FileInfo{Name: name, Path: name}) {
+			t.Errorf("isSourceFile(%q) = false, want true", name)
+		}
+	}
+	for _, name := range []string{"README.md", "config.yaml", "package.json", "App.test.tsx", "Makefile"} {
+		if isSourceFile(model.FileInfo{Name: name, Path: name}) {
+			t.Errorf("isSourceFile(%q) = true, want false", name)
+		}
+	}
+}

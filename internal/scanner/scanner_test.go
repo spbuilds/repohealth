@@ -94,3 +94,31 @@ func TestScanFileNotDirectory(t *testing.T) {
 		t.Error("expected error when scanning a file (not a directory), got nil")
 	}
 }
+
+func TestIsSourceExt(t *testing.T) {
+	cases := map[string]bool{
+		".go": true, ".tsx": true, ".jsx": true, ".cs": true, ".dart": true,
+		".ex": true, ".exs": true, ".lua": true, ".r": true, ".sql": true,
+		".html": true, ".css": true, ".scss": true, ".bash": true, ".zsh": true,
+		".md": false, ".yml": false, ".yaml": false, ".json": false, ".toml": false,
+		".png": false, ".lock": false, "": false,
+	}
+	for ext, want := range cases {
+		if got := IsSourceExt(ext); got != want {
+			t.Errorf("IsSourceExt(%q) = %v, want %v", ext, got, want)
+		}
+	}
+}
+
+func TestIsCodeLanguage(t *testing.T) {
+	for _, lang := range []string{"Markdown", "YAML", "JSON", "TOML"} {
+		if IsCodeLanguage(lang) {
+			t.Errorf("IsCodeLanguage(%q) = true, want false", lang)
+		}
+	}
+	for _, lang := range []string{"Go", "TypeScript", "C#", "Dart"} {
+		if !IsCodeLanguage(lang) {
+			t.Errorf("IsCodeLanguage(%q) = false, want true", lang)
+		}
+	}
+}

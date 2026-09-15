@@ -262,3 +262,25 @@ func TestBranchProtectionCheck_CODEOWNERS(t *testing.T) {
 		t.Errorf("Status = %v, want Full for CODEOWNERS", result.Status)
 	}
 }
+
+func TestNoSecretsCheck_None_AWSKeyInTSX(t *testing.T) {
+	dir := makeTempRepo(t, map[string]string{
+		"App.tsx": "export const key = \"AKIAIOSFODNN7EXAMPLE\";\n",
+	})
+	ctx := &model.ScanContext{RepoPath: dir, Files: fileInfos("App.tsx")}
+	result := (&NoSecretsCheck{}).Run(ctx)
+	if result.Status != model.StatusNone {
+		t.Errorf("Status = %v, want None (AWS key in .tsx must be detected)", result.Status)
+	}
+}
+
+func TestNoSecretsCheck_None_AWSKeyInCSharp(t *testing.T) {
+	dir := makeTempRepo(t, map[string]string{
+		"Program.cs": "const string Key = \"AKIAIOSFODNN7EXAMPLE\";\n",
+	})
+	ctx := &model.ScanContext{RepoPath: dir, Files: fileInfos("Program.cs")}
+	result := (&NoSecretsCheck{}).Run(ctx)
+	if result.Status != model.StatusNone {
+		t.Errorf("Status = %v, want None (AWS key in .cs must be detected)", result.Status)
+	}
+}

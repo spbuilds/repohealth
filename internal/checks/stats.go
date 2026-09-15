@@ -11,17 +11,6 @@ import (
 	"github.com/spbuilds/repohealth/internal/scanner"
 )
 
-var sourceExtensions = map[string]bool{
-	".go": true, ".py": true, ".js": true, ".ts": true,
-	".java": true, ".rs": true, ".rb": true, ".c": true,
-	".cpp": true, ".h": true, ".sh": true, ".php": true,
-	".swift": true, ".kt": true,
-}
-
-var nonCodeLanguages = map[string]bool{
-	"Markdown": true, "YAML": true, "JSON": true, "TOML": true,
-}
-
 // isTestFile returns true if the file name indicates a test file.
 func isTestFile(name string) bool {
 	lower := strings.ToLower(name)
@@ -54,7 +43,7 @@ func isSourceFile(f model.FileInfo) bool {
 		return false
 	}
 	ext := strings.ToLower(f.Name[dot:])
-	return sourceExtensions[ext] && !isTestFile(f.Name)
+	return scanner.IsSourceExt(ext) && !isTestFile(f.Name)
 }
 
 // STAT-01: Source files exist
@@ -99,7 +88,7 @@ func (c *LanguageDiversityCheck) MaxPoints() int   { return 1 }
 func (c *LanguageDiversityCheck) Run(ctx *model.ScanContext) model.CheckResult {
 	count := 0
 	for lang := range ctx.Languages {
-		if !nonCodeLanguages[lang] {
+		if scanner.IsCodeLanguage(lang) {
 			count++
 		}
 	}
@@ -115,7 +104,7 @@ func (c *LanguageDiversityCheck) Run(ctx *model.ScanContext) model.CheckResult {
 		// Finding the primary language is a pass — polyglot is not required
 		var primaryLang string
 		for lang := range ctx.Languages {
-			if !nonCodeLanguages[lang] {
+			if scanner.IsCodeLanguage(lang) {
 				primaryLang = lang
 				break
 			}

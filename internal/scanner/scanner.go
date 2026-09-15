@@ -83,6 +83,26 @@ var languageExtensions = map[string]string{
 	".exs":   "Elixir",
 }
 
+// nonCodeLanguages are recognised languages that hold configuration or prose
+// rather than source code. They count for language detection but not for
+// source-file checks (stats, TODO scanning, secret scanning).
+var nonCodeLanguages = map[string]bool{
+	"Markdown": true, "YAML": true, "JSON": true, "TOML": true,
+}
+
+// IsSourceExt reports whether ext (lower-case, with leading dot) belongs to a
+// source-code language known to the scanner.
+func IsSourceExt(ext string) bool {
+	lang, ok := languageExtensions[ext]
+	return ok && !nonCodeLanguages[lang]
+}
+
+// IsCodeLanguage reports whether a language name produced by Scan is source
+// code rather than configuration or prose.
+func IsCodeLanguage(lang string) bool {
+	return !nonCodeLanguages[lang]
+}
+
 // Scan walks the repository directory and collects metadata.
 func Scan(repoPath string, excludes []string) (*model.ScanContext, error) {
 	absPath, err := filepath.Abs(repoPath)

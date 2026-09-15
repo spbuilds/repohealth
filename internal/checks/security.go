@@ -63,7 +63,7 @@ func (c *NoSecretsCheck) Run(ctx *model.ScanContext) model.CheckResult {
 			continue
 		}
 		ext := strings.ToLower(filepath.Ext(f.Name))
-		if !sourceExtensions[ext] {
+		if !scanner.IsSourceExt(ext) {
 			continue
 		}
 
