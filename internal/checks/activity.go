@@ -227,7 +227,7 @@ func (c *BusFactorCheck) Run(ctx *model.ScanContext) model.CheckResult {
 		}
 	}
 
-	factor, err := scanner.BusFactor(ctx.RepoPath)
+	commits, factor, err := scanner.BusFactor(ctx.RepoPath)
 	if err != nil {
 		return model.CheckResult{
 			ID: c.ID(), Category: c.Category(), Name: c.Name(),
@@ -236,11 +236,23 @@ func (c *BusFactorCheck) Run(ctx *model.ScanContext) model.CheckResult {
 		}
 	}
 
-	if factor == 0 {
+	return c.evaluate(commits, factor)
+}
+
+func (c *BusFactorCheck) evaluate(commits, factor int) model.CheckResult {
+	if commits == 0 {
 		return model.CheckResult{
 			ID: c.ID(), Category: c.Category(), Name: c.Name(),
 			Status: model.StatusSkipped, Points: 0, MaxPoints: c.MaxPoints(),
 			Details: "No commits found",
+		}
+	}
+
+	if factor == 0 {
+		return model.CheckResult{
+			ID: c.ID(), Category: c.Category(), Name: c.Name(),
+			Status: model.StatusFull, Points: c.MaxPoints(), MaxPoints: c.MaxPoints(),
+			Details: "no single author exceeds 10% of non-merge commits",
 		}
 	}
 

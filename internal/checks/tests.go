@@ -88,6 +88,24 @@ func (c *TestDirExistsCheck) Run(ctx *model.ScanContext) model.CheckResult {
 	}
 }
 
+// testFrameworkConfigs lists framework configuration files in detection
+// order. When a repository contains several, the first match is reported.
+var testFrameworkConfigs = []struct{ file, name string }{
+	{"jest.config.js", "Jest"},
+	{"jest.config.ts", "Jest"},
+	{"jest.config.mjs", "Jest"},
+	{"jest.config.cjs", "Jest"},
+	{"vitest.config.ts", "Vitest"},
+	{"vitest.config.js", "Vitest"},
+	{"vitest.config.mts", "Vitest"},
+	{"pytest.ini", "pytest"},
+	{".mocharc.yml", "Mocha"},
+	{".mocharc.yaml", "Mocha"},
+	{".mocharc.js", "Mocha"},
+	{"phpunit.xml", "PHPUnit"},
+	{"phpunit.xml.dist", "PHPUnit"},
+}
+
 // TST-03: Test framework configured
 type TestFrameworkCheck struct{}
 
@@ -97,28 +115,12 @@ func (c *TestFrameworkCheck) Name() string     { return "Test framework configur
 func (c *TestFrameworkCheck) MaxPoints() int   { return 4 }
 
 func (c *TestFrameworkCheck) Run(ctx *model.ScanContext) model.CheckResult {
-	frameworks := map[string]string{
-		"jest.config.js":    "Jest",
-		"jest.config.ts":    "Jest",
-		"jest.config.mjs":   "Jest",
-		"jest.config.cjs":   "Jest",
-		"vitest.config.ts":  "Vitest",
-		"vitest.config.js":  "Vitest",
-		"vitest.config.mts": "Vitest",
-		"pytest.ini":        "pytest",
-		".mocharc.yml":      "Mocha",
-		".mocharc.yaml":     "Mocha",
-		".mocharc.js":       "Mocha",
-		"phpunit.xml":       "PHPUnit",
-		"phpunit.xml.dist":  "PHPUnit",
-	}
-
-	for file, name := range frameworks {
-		if _, ok := ctx.HasFile(file); ok {
+	for _, fw := range testFrameworkConfigs {
+		if _, ok := ctx.HasFile(fw.file); ok {
 			return model.CheckResult{
 				ID: c.ID(), Category: c.Category(), Name: c.Name(),
 				Status: model.StatusFull, Points: c.MaxPoints(), MaxPoints: c.MaxPoints(),
-				Details: name,
+				Details: fw.name,
 			}
 		}
 	}

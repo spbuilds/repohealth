@@ -31,12 +31,13 @@ var shortlogCache struct {
 	mu           sync.Mutex
 	repoPath     string
 	contributors int
+	commits      int
 	busFactor    int
 	err          error
 	done         bool
 }
 
-func shortlogStats(repoPath string) (int, int, error) {
+func shortlogStats(repoPath string) (contributors, commits, busFactor int, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), gitTimeout)
 	defer cancel()
 
@@ -44,15 +45,15 @@ func shortlogStats(repoPath string) (int, int, error) {
 	cmd.Dir = repoPath
 	out, err := cmd.Output()
 	if err != nil {
-		return 0, 0, err
+		return 0, 0, 0, err
 	}
 
 	lines := strings.Split(strings.TrimSpace(string(out)), "\n")
 	if len(lines) == 1 && lines[0] == "" {
-		return 0, 0, nil
+		return 0, 0, 0, nil
 	}
 
-	contributors := len(lines)
+	contributors = len(lines)
 	totalCommits := 0
 	var counts []int
 	for _, line := range lines {
@@ -74,7 +75,7 @@ func shortlogStats(repoPath string) (int, int, error) {
 		totalCommits += n
 	}
 
-	busFactor := 0
+	busFactor = 0
 	if totalCommits > 0 {
 		thresholdF := float64(totalCommits) * 0.10
 		for _, c := range counts {
@@ -84,34 +85,35 @@ func shortlogStats(repoPath string) (int, int, error) {
 		}
 	}
 
-	return contributors, busFactor, nil
+	return contributors, totalCommits, busFactor, nil
 }
 
-func cachedShortlog(repoPath string) (int, int, error) {
+func cachedShortlog(repoPath string) (contributors, commits, busFactor int, err error) {
 	shortlogCache.mu.Lock()
 	if shortlogCache.done && shortlogCache.repoPath == repoPath {
-		c, b, e := shortlogCache.contributors, shortlogCache.busFactor, shortlogCache.err
+		c, n, b, e := shortlogCache.contributors, shortlogCache.commits, shortlogCache.busFactor, shortlogCache.err
 		shortlogCache.mu.Unlock()
-		return c, b, e
+		return c, n, b, e
 	}
 	shortlogCache.mu.Unlock()
 
-	c, b, err := shortlogStats(repoPath)
+	c, n, b, err := shortlogStats(repoPath)
 
 	shortlogCache.mu.Lock()
 	shortlogCache.repoPath = repoPath
 	shortlogCache.contributors = c
+	shortlogCache.commits = n
 	shortlogCache.busFactor = b
 	shortlogCache.err = err
 	shortlogCache.done = true
 	shortlogCache.mu.Unlock()
 
-	return c, b, err
+	return c, n, b, err
 }
 
 // ContributorCount returns the number of unique commit authors.
 func ContributorCount(repoPath string) (int, error) {
-	c, _, err := cachedShortlog(repoPath)
+	c, _, _, err := cachedShortlog(repoPath)
 	return c, err
 }
 
@@ -171,8 +173,9 @@ func FileLastCommitDate(repoPath, filePath string) (time.Time, error) {
 	return time.Parse(time.RFC3339, strings.TrimSpace(string(out)))
 }
 
-// BusFactor returns the number of contributors with > 10% of total commits.
-func BusFactor(repoPath string) (int, error) {
-	_, b, err := cachedShortlog(repoPath)
-	return b, err
+// BusFactor returns the number of non-merge commits and the number of
+// authors with more than 10% of them.
+func BusFactor(repoPath string) (commits, busFactor int, err error) {
+	_, n, b, err := cachedShortlog(repoPath)
+	return n, b, err
 }
