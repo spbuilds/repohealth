@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - TODO detection: `TODO`, `FIXME`, `HACK` and `XXX` are counted only as whole words following a comment opener valid for the file's language; openers inside single-line string literals are ignored. Marker text in code, single-line string literals, URLs and identifiers no longer counts
 - Test-file recognition now covers C# (`*Test.cs`, `*Tests.cs`), Dart (`*_test.dart`), Elixir (`*_test.exs`), Lua (`*_test.lua`, `*_spec.lua`) and R (`test-*.R`, `test_*.R`, also with a lower-case `.r` extension); these files count for TST-01 and TST-05 and are excluded from the secret scan and source-file counts like other languages' test files
 - Scanner: a repository path that is a symlink is resolved before scanning. Previously it scanned as an empty repository
+- TST-03: when a repository contains configuration files for several test frameworks, the framework named in the check details is chosen in a fixed order (Jest, Vitest, pytest, Mocha, PHPUnit). Previously the name could differ between runs on the same repository
+- ACT-05: a repository whose commits are spread so widely that no single author holds more than 10% of them is now scored Full, with details saying so. Previously it was skipped with the details "No commits found", which was inaccurate
 
 ### Changed
 - STAT-03 (comment ratio) and TST-05 (test-to-source ratio) measure programming-language files only; markup and stylesheets (`.html`, `.css`, `.scss`) still count as source files for STAT-01 and are still secret- and TODO-scanned

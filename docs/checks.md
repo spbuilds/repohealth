@@ -70,7 +70,7 @@ Each check returns one of four statuses: **Full** (all of its points), **Partial
 | ACT-02 | Commit frequency | 3 | Number of commits in the last 6 months (`git log --since="6 months ago"`). More than 50 → Full; 10–50 → Partial (1); fewer than 10 → None. Skipped when git is unavailable. |
 | ACT-03 | Contributors | 3 | Number of unique authors (`git shortlog -sn --no-merges HEAD`). More than 5 → Full; 2–5 → Partial (1); 1 → None. Skipped when git is unavailable or there are no commits. |
 | ACT-04 | Release exists | 2 | Full if the repository has at least one git tag (`git tag -l`); otherwise None. Skipped when git is unavailable. |
-| ACT-05 | Bus factor | 2 | Number of authors with more than 10% of non-merge commits. 3 or more → Full; 2 → Partial (1); 1 → None. Skipped when git is unavailable, there are no commits, or no single author exceeds 10%. |
+| ACT-05 | Bus factor | 2 | Number of authors with more than 10% of non-merge commits (`git shortlog -sn --no-merges HEAD`). 3 or more → Full; 2 → Partial (1); 1 → None. Also Full when commits exist but no single author exceeds 10%, since contributions are spread across many authors. Skipped when git is unavailable or there are no commits. |
 
 Activity checks require a `.git` entry (directory or file) at the root. Without one every Activity check is Skipped and the category is excluded from the score. Git commands run with a 5-second timeout.
 
