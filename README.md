@@ -121,18 +121,31 @@ $ repohealth .
 
 ## Real Repository Scores
 
-Tested on well-known open-source projects (v0.5.0, 33 checks):
+RepoHealth measures repository hygiene and project-maintenance signals, not source-code quality, security posture, or overall project quality. The table reports RepoHealth results for the pinned revisions listed in the manifest; it is not a judgment of the projects.
 
-| Repository | Language | Score | Grade | Files | Time |
-|------------|----------|-------|-------|-------|------|
-| [gin](https://github.com/gin-gonic/gin) | Go | 77 | B | 130 | 75ms |
-| [cobra](https://github.com/spf13/cobra) | Go | 64 | C | 66 | 55ms |
-| [next.js](https://github.com/vercel/next.js) | JavaScript | 64 | C | 26,716 | 1.9s |
-| [django](https://github.com/django/django) | Python | 55 | C- | 6,942 | 580ms |
-| [rust](https://github.com/rust-lang/rust) | Rust | 56 | C- | 57,236 | 5.6s |
-| [kubernetes](https://github.com/kubernetes/kubernetes) | Go | 53 | D | 23,674 | 2.2s |
+v0.5.3 benchmark: 36 checks, 19 repositories, evaluated on 2026-09-17 (UTC) against pinned upstream commits with full git history. Each repository was scanned twice and produced identical results apart from timestamp and duration. Activity and dependency-freshness checks depend on the evaluation date, so the scores are a snapshot rather than a permanent rating. Pinned commits, per-category scores and skipped checks are in [benchmarks/v0.5.3.json](benchmarks/v0.5.3.json). Earlier benchmark runs used older RepoHealth versions, other repository revisions and in some cases shallow history, so they are not directly comparable.
 
-Scores reflect all 8 categories: documentation, tests, CI/CD, dependencies, security, code statistics, activity, and TODO debt. Large monorepos score lower due to non-standard CI, missing community files, and high TODO counts.
+| Repository | Score | Grade | Files |
+|------------|-------|-------|-------|
+| [prometheus/prometheus](https://github.com/prometheus/prometheus) | 86 | A- | 1,668 |
+| [gin-gonic/gin](https://github.com/gin-gonic/gin) | 85 | A- | 130 |
+| [hashicorp/terraform](https://github.com/hashicorp/terraform) | 82 | B+ | 5,452 |
+| [docker/compose](https://github.com/docker/compose) | 82 | B+ | 835 |
+| [facebook/react](https://github.com/facebook/react) | 82 | B+ | 7,195 |
+| [grafana/grafana](https://github.com/grafana/grafana) | 81 | B+ | 22,738 |
+| [vercel/next.js](https://github.com/vercel/next.js) | 72 | B- | 30,709 |
+| [spf13/cobra](https://github.com/spf13/cobra) | 70 | B- | 66 |
+| [rails/rails](https://github.com/rails/rails) | 68 | C+ | 4,960 |
+| [python/cpython](https://github.com/python/cpython) | 68 | C+ | 6,268 |
+| [rust-lang/rust](https://github.com/rust-lang/rust) | 68 | C+ | 61,340 |
+| [pallets/flask](https://github.com/pallets/flask) | 67 | C+ | 232 |
+| [fastapi/fastapi](https://github.com/fastapi/fastapi) | 66 | C+ | 3,139 |
+| [django/django](https://github.com/django/django) | 66 | C+ | 7,006 |
+| [kubernetes/kubernetes](https://github.com/kubernetes/kubernetes) | 65 | C+ | 25,788 |
+| [vuejs/vue](https://github.com/vuejs/vue) | 65 | C+ | 505 |
+| [expressjs/express](https://github.com/expressjs/express) | 55 | C- | 212 |
+| [laravel/laravel](https://github.com/laravel/laravel) | 53 | D | 52 |
+| [golang/go](https://github.com/golang/go) | 51 | D | 14,698 |
 
 ## What It Checks
 

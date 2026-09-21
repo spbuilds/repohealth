@@ -1,0 +1,908 @@
+{
+  "benchmark_schema": "1.0",
+  "repohealth_version": "v0.5.3-rc.2",
+  "scoring_commit": "c71ad2ad3d1def252b1c5615248edd53384a3912",
+  "provenance": "Scanned with v0.5.3-rc.2, a release-candidate build of the scoring implementation at scoring_commit. Any build of that implementation produces the same results for the same repository state and evaluation time.",
+  "checks": 36,
+  "raw_max": 96,
+  "benchmark_date": "2026-09-17",
+  "evaluation_window_utc": {
+    "start": "2026-09-17T06:18:31Z",
+    "end": "2026-09-17T06:26:55Z"
+  },
+  "timezone": "UTC",
+  "repository_count": 19,
+  "methodology": {
+    "repositories": "19 well-known open-source repositories, listed in a fixed order",
+    "pinning": "Each repository's contents are pinned by the exact upstream commit SHA in upstream_sha; the commit date is upstream_commit_date",
+    "history": "Full git history was fetched for every repository; no shallow clones",
+    "runs": "Each repository was scanned twice in UTC; the complete results were identical apart from timestamp and duration",
+    "scoring": "36 checks across 8 categories, 96 raw points, normalized to a 0-100 score; category_scores lists points per category",
+    "skipped_checks": "Checks that could not be evaluated are listed per repository; their points are redistributed within the category as described in docs/scoring.md",
+    "time_dependence": "Activity and dependency-freshness checks depend on the evaluation time (evaluated_at), so results can change when a repository is re-scanned on a later date",
+    "tags": "Repository tag metadata such as the release-tag count is clone-time metadata and is not fully pinned by the commit SHA",
+    "comparability": "Earlier benchmark runs used different RepoHealth versions, repository revisions or shallow history and are not directly comparable"
+  },
+  "repositories": [
+    {
+      "repository": "prometheus/prometheus",
+      "repository_url": "https://github.com/prometheus/prometheus",
+      "upstream_sha": "50461b669f0be3a9f0b31a94f72cde8e98f2779f",
+      "upstream_commit_date": "2026-09-16T09:00:51Z",
+      "evaluated_at": "2026-09-17T06:18:47Z",
+      "score": 86,
+      "grade": "A-",
+      "files_analyzed": 1668,
+      "category_scores": {
+        "docs": {
+          "score": 15,
+          "max": 15
+        },
+        "tests": {
+          "score": 17,
+          "max": 20
+        },
+        "cicd": {
+          "score": 15,
+          "max": 15
+        },
+        "deps": {
+          "score": 8,
+          "max": 9
+        },
+        "security": {
+          "score": 4,
+          "max": 10
+        },
+        "stats": {
+          "score": 5,
+          "max": 5
+        },
+        "activity": {
+          "score": 15,
+          "max": 15
+        },
+        "todo": {
+          "score": 4,
+          "max": 7
+        }
+      },
+      "skipped_checks": []
+    },
+    {
+      "repository": "gin-gonic/gin",
+      "repository_url": "https://github.com/gin-gonic/gin",
+      "upstream_sha": "5c6a15f8f9566612076bd209e623861bf92a6283",
+      "upstream_commit_date": "2026-09-16T15:01:52Z",
+      "evaluated_at": "2026-09-17T06:18:51Z",
+      "score": 85,
+      "grade": "A-",
+      "files_analyzed": 130,
+      "category_scores": {
+        "docs": {
+          "score": 13,
+          "max": 15
+        },
+        "tests": {
+          "score": 18,
+          "max": 20
+        },
+        "cicd": {
+          "score": 15,
+          "max": 15
+        },
+        "deps": {
+          "score": 9,
+          "max": 9
+        },
+        "security": {
+          "score": 6,
+          "max": 10
+        },
+        "stats": {
+          "score": 5,
+          "max": 5
+        },
+        "activity": {
+          "score": 11,
+          "max": 15
+        },
+        "todo": {
+          "score": 5,
+          "max": 7
+        }
+      },
+      "skipped_checks": []
+    },
+    {
+      "repository": "hashicorp/terraform",
+      "repository_url": "https://github.com/hashicorp/terraform",
+      "upstream_sha": "f8e7458f5e427027f5b25e24a433c56f049aed3d",
+      "upstream_commit_date": "2026-09-15T19:25:38Z",
+      "evaluated_at": "2026-09-17T06:19:05Z",
+      "score": 82,
+      "grade": "B+",
+      "files_analyzed": 5452,
+      "category_scores": {
+        "docs": {
+          "score": 12,
+          "max": 15
+        },
+        "tests": {
+          "score": 17,
+          "max": 20
+        },
+        "cicd": {
+          "score": 15,
+          "max": 15
+        },
+        "deps": {
+          "score": 8,
+          "max": 9
+        },
+        "security": {
+          "score": 4,
+          "max": 10
+        },
+        "stats": {
+          "score": 5,
+          "max": 5
+        },
+        "activity": {
+          "score": 14,
+          "max": 15
+        },
+        "todo": {
+          "score": 4,
+          "max": 7
+        }
+      },
+      "skipped_checks": []
+    },
+    {
+      "repository": "docker/compose",
+      "repository_url": "https://github.com/docker/compose",
+      "upstream_sha": "8d266c871d16d5a85e699190c6a9aa07e14153e0",
+      "upstream_commit_date": "2026-09-16T15:03:23Z",
+      "evaluated_at": "2026-09-17T06:19:13Z",
+      "score": 82,
+      "grade": "B+",
+      "files_analyzed": 835,
+      "category_scores": {
+        "docs": {
+          "score": 12,
+          "max": 15
+        },
+        "tests": {
+          "score": 18,
+          "max": 20
+        },
+        "cicd": {
+          "score": 12,
+          "max": 15
+        },
+        "deps": {
+          "score": 8,
+          "max": 9
+        },
+        "security": {
+          "score": 8,
+          "max": 10
+        },
+        "stats": {
+          "score": 3,
+          "max": 5
+        },
+        "activity": {
+          "score": 14,
+          "max": 15
+        },
+        "todo": {
+          "score": 4,
+          "max": 7
+        }
+      },
+      "skipped_checks": []
+    },
+    {
+      "repository": "grafana/grafana",
+      "repository_url": "https://github.com/grafana/grafana",
+      "upstream_sha": "4e83b604a1901e65e1926da1d0b17d9d95f10bfc",
+      "upstream_commit_date": "2026-09-16T14:59:21Z",
+      "evaluated_at": "2026-09-17T06:20:07Z",
+      "score": 81,
+      "grade": "B+",
+      "files_analyzed": 22738,
+      "category_scores": {
+        "docs": {
+          "score": 12,
+          "max": 15
+        },
+        "tests": {
+          "score": 17,
+          "max": 20
+        },
+        "cicd": {
+          "score": 15,
+          "max": 15
+        },
+        "deps": {
+          "score": 8,
+          "max": 9
+        },
+        "security": {
+          "score": 5,
+          "max": 10
+        },
+        "stats": {
+          "score": 4,
+          "max": 5
+        },
+        "activity": {
+          "score": 13,
+          "max": 15
+        },
+        "todo": {
+          "score": 4,
+          "max": 7
+        }
+      },
+      "skipped_checks": []
+    },
+    {
+      "repository": "facebook/react",
+      "repository_url": "https://github.com/facebook/react",
+      "upstream_sha": "2b19aecd0e9111b774fad0fad9862e50bcb5bc8a",
+      "upstream_commit_date": "2026-09-16T10:35:58Z",
+      "evaluated_at": "2026-09-17T06:20:25Z",
+      "score": 82,
+      "grade": "B+",
+      "files_analyzed": 7195,
+      "category_scores": {
+        "docs": {
+          "score": 15,
+          "max": 15
+        },
+        "tests": {
+          "score": 14,
+          "max": 20
+        },
+        "cicd": {
+          "score": 15,
+          "max": 15
+        },
+        "deps": {
+          "score": 8,
+          "max": 9
+        },
+        "security": {
+          "score": 3,
+          "max": 10
+        },
+        "stats": {
+          "score": 5,
+          "max": 5
+        },
+        "activity": {
+          "score": 15,
+          "max": 15
+        },
+        "todo": {
+          "score": 4,
+          "max": 7
+        }
+      },
+      "skipped_checks": []
+    },
+    {
+      "repository": "vercel/next.js",
+      "repository_url": "https://github.com/vercel/next.js",
+      "upstream_sha": "bdbf63aef73433de17c2c8d6cb7e5ef16e93f9a2",
+      "upstream_commit_date": "2026-09-16T15:09:32Z",
+      "evaluated_at": "2026-09-17T06:21:08Z",
+      "score": 72,
+      "grade": "B-",
+      "files_analyzed": 30709,
+      "category_scores": {
+        "docs": {
+          "score": 6,
+          "max": 15
+        },
+        "tests": {
+          "score": 14,
+          "max": 20
+        },
+        "cicd": {
+          "score": 15,
+          "max": 15
+        },
+        "deps": {
+          "score": 8,
+          "max": 9
+        },
+        "security": {
+          "score": 5,
+          "max": 10
+        },
+        "stats": {
+          "score": 4,
+          "max": 5
+        },
+        "activity": {
+          "score": 15,
+          "max": 15
+        },
+        "todo": {
+          "score": 2,
+          "max": 7
+        }
+      },
+      "skipped_checks": []
+    },
+    {
+      "repository": "rails/rails",
+      "repository_url": "https://github.com/rails/rails",
+      "upstream_sha": "216b59017fd12fa3ffd3ecd632dc47203a58f353",
+      "upstream_commit_date": "2026-09-16T07:05:22Z",
+      "evaluated_at": "2026-09-17T06:21:37Z",
+      "score": 68,
+      "grade": "C+",
+      "files_analyzed": 4960,
+      "category_scores": {
+        "docs": {
+          "score": 9,
+          "max": 15
+        },
+        "tests": {
+          "score": 13,
+          "max": 20
+        },
+        "cicd": {
+          "score": 6,
+          "max": 15
+        },
+        "deps": {
+          "score": 9,
+          "max": 9
+        },
+        "security": {
+          "score": 4,
+          "max": 10
+        },
+        "stats": {
+          "score": 5,
+          "max": 5
+        },
+        "activity": {
+          "score": 15,
+          "max": 15
+        },
+        "todo": {
+          "score": 4,
+          "max": 7
+        }
+      },
+      "skipped_checks": []
+    },
+    {
+      "repository": "fastapi/fastapi",
+      "repository_url": "https://github.com/fastapi/fastapi",
+      "upstream_sha": "50113da16fec53b66b80d75e80a89296de4fa5a5",
+      "upstream_commit_date": "2026-09-01T20:59:53Z",
+      "evaluated_at": "2026-09-17T06:21:47Z",
+      "score": 66,
+      "grade": "C+",
+      "files_analyzed": 3139,
+      "category_scores": {
+        "docs": {
+          "score": 9,
+          "max": 15
+        },
+        "tests": {
+          "score": 17,
+          "max": 20
+        },
+        "cicd": {
+          "score": 10,
+          "max": 15
+        },
+        "deps": {
+          "score": 3,
+          "max": 9
+        },
+        "security": {
+          "score": 0,
+          "max": 10
+        },
+        "stats": {
+          "score": 4,
+          "max": 5
+        },
+        "activity": {
+          "score": 15,
+          "max": 15
+        },
+        "todo": {
+          "score": 5,
+          "max": 7
+        }
+      },
+      "skipped_checks": [
+        "DEP-03",
+        "DEP-05"
+      ]
+    },
+    {
+      "repository": "python/cpython",
+      "repository_url": "https://github.com/python/cpython",
+      "upstream_sha": "0a6c1ed34118b091230ee38fc047bcc2df8e5c5e",
+      "upstream_commit_date": "2026-09-16T13:28:59Z",
+      "evaluated_at": "2026-09-17T06:22:35Z",
+      "score": 68,
+      "grade": "C+",
+      "files_analyzed": 6268,
+      "category_scores": {
+        "docs": {
+          "score": 10,
+          "max": 15
+        },
+        "tests": {
+          "score": 16,
+          "max": 20
+        },
+        "cicd": {
+          "score": 15,
+          "max": 15
+        },
+        "deps": {
+          "score": 0,
+          "max": 9
+        },
+        "security": {
+          "score": 3,
+          "max": 10
+        },
+        "stats": {
+          "score": 4,
+          "max": 5
+        },
+        "activity": {
+          "score": 15,
+          "max": 15
+        },
+        "todo": {
+          "score": 2,
+          "max": 7
+        }
+      },
+      "skipped_checks": [
+        "DEP-03",
+        "DEP-05"
+      ]
+    },
+    {
+      "repository": "pallets/flask",
+      "repository_url": "https://github.com/pallets/flask",
+      "upstream_sha": "d73fa1cdcbd8b1465c151db8924ba58b1dd14e35",
+      "upstream_commit_date": "2026-09-08T16:40:41Z",
+      "evaluated_at": "2026-09-17T06:22:42Z",
+      "score": 67,
+      "grade": "C+",
+      "files_analyzed": 232,
+      "category_scores": {
+        "docs": {
+          "score": 8,
+          "max": 15
+        },
+        "tests": {
+          "score": 13,
+          "max": 20
+        },
+        "cicd": {
+          "score": 13,
+          "max": 15
+        },
+        "deps": {
+          "score": 3,
+          "max": 9
+        },
+        "security": {
+          "score": 4,
+          "max": 10
+        },
+        "stats": {
+          "score": 4,
+          "max": 5
+        },
+        "activity": {
+          "score": 12,
+          "max": 15
+        },
+        "todo": {
+          "score": 7,
+          "max": 7
+        }
+      },
+      "skipped_checks": [
+        "DEP-03",
+        "DEP-05"
+      ]
+    },
+    {
+      "repository": "django/django",
+      "repository_url": "https://github.com/django/django",
+      "upstream_sha": "8cbdd4a814397f81adf0129288f32b615bd1f94f",
+      "upstream_commit_date": "2026-09-16T09:59:07Z",
+      "evaluated_at": "2026-09-17T06:23:00Z",
+      "score": 66,
+      "grade": "C+",
+      "files_analyzed": 7006,
+      "category_scores": {
+        "docs": {
+          "score": 11,
+          "max": 15
+        },
+        "tests": {
+          "score": 11,
+          "max": 20
+        },
+        "cicd": {
+          "score": 13,
+          "max": 15
+        },
+        "deps": {
+          "score": 4,
+          "max": 9
+        },
+        "security": {
+          "score": 0,
+          "max": 10
+        },
+        "stats": {
+          "score": 5,
+          "max": 5
+        },
+        "activity": {
+          "score": 15,
+          "max": 15
+        },
+        "todo": {
+          "score": 4,
+          "max": 7
+        }
+      },
+      "skipped_checks": [
+        "DEP-03"
+      ]
+    },
+    {
+      "repository": "kubernetes/kubernetes",
+      "repository_url": "https://github.com/kubernetes/kubernetes",
+      "upstream_sha": "16f2372dd50524c61f7bd752315c5ecb8490ef9e",
+      "upstream_commit_date": "2026-09-16T14:21:21Z",
+      "evaluated_at": "2026-09-17T06:24:04Z",
+      "score": 65,
+      "grade": "C+",
+      "files_analyzed": 25788,
+      "category_scores": {
+        "docs": {
+          "score": 13,
+          "max": 15
+        },
+        "tests": {
+          "score": 17,
+          "max": 20
+        },
+        "cicd": {
+          "score": 0,
+          "max": 15
+        },
+        "deps": {
+          "score": 8,
+          "max": 9
+        },
+        "security": {
+          "score": 3,
+          "max": 10
+        },
+        "stats": {
+          "score": 4,
+          "max": 5
+        },
+        "activity": {
+          "score": 15,
+          "max": 15
+        },
+        "todo": {
+          "score": 2,
+          "max": 7
+        }
+      },
+      "skipped_checks": [
+        "CI-02",
+        "CI-03",
+        "CI-04"
+      ]
+    },
+    {
+      "repository": "vuejs/vue",
+      "repository_url": "https://github.com/vuejs/vue",
+      "upstream_sha": "9e88707940088cb1f4cd7dd210c9168a50dc347c",
+      "upstream_commit_date": "2024-10-10T07:24:14Z",
+      "evaluated_at": "2026-09-17T06:24:14Z",
+      "score": 65,
+      "grade": "C+",
+      "files_analyzed": 505,
+      "category_scores": {
+        "docs": {
+          "score": 12,
+          "max": 15
+        },
+        "tests": {
+          "score": 17,
+          "max": 20
+        },
+        "cicd": {
+          "score": 10,
+          "max": 15
+        },
+        "deps": {
+          "score": 7,
+          "max": 9
+        },
+        "security": {
+          "score": 2,
+          "max": 10
+        },
+        "stats": {
+          "score": 4,
+          "max": 5
+        },
+        "activity": {
+          "score": 5,
+          "max": 15
+        },
+        "todo": {
+          "score": 5,
+          "max": 7
+        }
+      },
+      "skipped_checks": []
+    },
+    {
+      "repository": "expressjs/express",
+      "repository_url": "https://github.com/expressjs/express",
+      "upstream_sha": "9a34acf03cb818ff3f8bc40e44176e277a25cbb9",
+      "upstream_commit_date": "2026-09-15T17:52:26Z",
+      "evaluated_at": "2026-09-17T06:24:18Z",
+      "score": 55,
+      "grade": "C-",
+      "files_analyzed": 212,
+      "category_scores": {
+        "docs": {
+          "score": 9,
+          "max": 15
+        },
+        "tests": {
+          "score": 2,
+          "max": 20
+        },
+        "cicd": {
+          "score": 13,
+          "max": 15
+        },
+        "deps": {
+          "score": 4,
+          "max": 9
+        },
+        "security": {
+          "score": 0,
+          "max": 10
+        },
+        "stats": {
+          "score": 5,
+          "max": 5
+        },
+        "activity": {
+          "score": 13,
+          "max": 15
+        },
+        "todo": {
+          "score": 7,
+          "max": 7
+        }
+      },
+      "skipped_checks": [
+        "DEP-03"
+      ]
+    },
+    {
+      "repository": "laravel/laravel",
+      "repository_url": "https://github.com/laravel/laravel",
+      "upstream_sha": "aa0cf127fc365a56ee016867144ddffabc2290ae",
+      "upstream_commit_date": "2026-08-25T16:27:44Z",
+      "evaluated_at": "2026-09-17T06:24:22Z",
+      "score": 53,
+      "grade": "D",
+      "files_analyzed": 52,
+      "category_scores": {
+        "docs": {
+          "score": 6,
+          "max": 15
+        },
+        "tests": {
+          "score": 6,
+          "max": 20
+        },
+        "cicd": {
+          "score": 6,
+          "max": 15
+        },
+        "deps": {
+          "score": 4,
+          "max": 9
+        },
+        "security": {
+          "score": 5,
+          "max": 10
+        },
+        "stats": {
+          "score": 4,
+          "max": 5
+        },
+        "activity": {
+          "score": 13,
+          "max": 15
+        },
+        "todo": {
+          "score": 7,
+          "max": 7
+        }
+      },
+      "skipped_checks": [
+        "DEP-03"
+      ]
+    },
+    {
+      "repository": "golang/go",
+      "repository_url": "https://github.com/golang/go",
+      "upstream_sha": "5c06c57d21281817ab62fa3083f92a8cedf76806",
+      "upstream_commit_date": "2026-09-16T12:26:27Z",
+      "evaluated_at": "2026-09-17T06:24:53Z",
+      "score": 51,
+      "grade": "D",
+      "files_analyzed": 14698,
+      "category_scores": {
+        "docs": {
+          "score": 14,
+          "max": 15
+        },
+        "tests": {
+          "score": 15,
+          "max": 20
+        },
+        "cicd": {
+          "score": 0,
+          "max": 15
+        },
+        "deps": {
+          "score": 0,
+          "max": 9
+        },
+        "security": {
+          "score": 0,
+          "max": 10
+        },
+        "stats": {
+          "score": 5,
+          "max": 5
+        },
+        "activity": {
+          "score": 13,
+          "max": 15
+        },
+        "todo": {
+          "score": 2,
+          "max": 7
+        }
+      },
+      "skipped_checks": [
+        "CI-02",
+        "CI-03",
+        "CI-04",
+        "DEP-03",
+        "DEP-05"
+      ]
+    },
+    {
+      "repository": "spf13/cobra",
+      "repository_url": "https://github.com/spf13/cobra",
+      "upstream_sha": "adbc8813901bba65827259daa8e22ff94ec1f30e",
+      "upstream_commit_date": "2026-07-11T00:43:07Z",
+      "evaluated_at": "2026-09-17T06:25:00Z",
+      "score": 70,
+      "grade": "B-",
+      "files_analyzed": 66,
+      "category_scores": {
+        "docs": {
+          "score": 13,
+          "max": 15
+        },
+        "tests": {
+          "score": 15,
+          "max": 20
+        },
+        "cicd": {
+          "score": 9,
+          "max": 15
+        },
+        "deps": {
+          "score": 7,
+          "max": 9
+        },
+        "security": {
+          "score": 6,
+          "max": 10
+        },
+        "stats": {
+          "score": 5,
+          "max": 5
+        },
+        "activity": {
+          "score": 7,
+          "max": 15
+        },
+        "todo": {
+          "score": 5,
+          "max": 7
+        }
+      },
+      "skipped_checks": []
+    },
+    {
+      "repository": "rust-lang/rust",
+      "repository_url": "https://github.com/rust-lang/rust",
+      "upstream_sha": "e15ceccfc6209c15b6c4bc6352f6ec6bfe579eaa",
+      "upstream_commit_date": "2026-09-16T11:13:53Z",
+      "evaluated_at": "2026-09-17T06:26:45Z",
+      "score": 68,
+      "grade": "C+",
+      "files_analyzed": 61340,
+      "category_scores": {
+        "docs": {
+          "score": 9,
+          "max": 15
+        },
+        "tests": {
+          "score": 10,
+          "max": 20
+        },
+        "cicd": {
+          "score": 12,
+          "max": 15
+        },
+        "deps": {
+          "score": 9,
+          "max": 9
+        },
+        "security": {
+          "score": 3,
+          "max": 10
+        },
+        "stats": {
+          "score": 5,
+          "max": 5
+        },
+        "activity": {
+          "score": 15,
+          "max": 15
+        },
+        "todo": {
+          "score": 2,
+          "max": 7
+        }
+      },
+      "skipped_checks": []
+    }
+  ]
+}
