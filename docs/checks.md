@@ -16,6 +16,8 @@ Each check returns one of four statuses: **Full** (all of its points), **Partial
 | DOC-06 | SECURITY.md exists | 2 | Full if `SECURITY.md` exists at the root or `.github/SECURITY.md` exists; otherwise None. |
 | DOC-07 | CHANGELOG exists | 1 | Full if `CHANGELOG.md`, `CHANGELOG`, `HISTORY.md` or `CHANGES.md` exists at the root; otherwise None. |
 
+DOC-04, DOC-05 and DOC-06 only see files inside the scanned repository, at the paths listed above. GitHub can also serve these community files from an organisation-level `.github` repository, but that repository is not part of the scanned tree and RepoHealth makes no network requests, so organisation-wide defaults are reported as missing. Adding the files to the repository itself, or a copy under `.github/`, makes them visible to the scan.
+
 ## Testing (20 points)
 
 | ID | Check | Points | Detection |

@@ -164,6 +164,8 @@ RepoHealth runs 36 checks across 8 categories:
 
 Each check contributes points. The total is normalized to 0-100 and graded A+ through F.
 
+The documentation checks look for community files such as `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` and `SECURITY.md` inside the scanned repository, at its root or under `.github/`. GitHub can also serve these files from an organisation-level `.github` repository, but that repository is not part of the scanned tree and RepoHealth makes no network requests, so a repository that relies on organisation-wide defaults is reported as missing them. See [docs/checks.md](docs/checks.md) for the exact paths each check accepts.
+
 ## How Scoring Works
 
 | Grade | Score | Meaning |
@@ -182,16 +184,22 @@ Every check that scores below full generates a specific, actionable suggestion s
 **Go install** (requires Go 1.22+):
 
 ```bash
-go install github.com/spbuilds/repohealth/cmd/repohealth@latest
+go install github.com/spbuilds/repohealth/cmd/repohealth@v0.5.3
 ```
 
-**Download binary** from [GitHub Releases](https://github.com/spbuilds/repohealth/releases):
+Use `@latest` instead of a version to install the newest release.
+
+**Prebuilt binaries** are attached to every [GitHub release](https://github.com/spbuilds/repohealth/releases) for Linux, macOS and Windows on amd64 and arm64. Archives are named `repohealth_<version>_<os>_<arch>.tar.gz` (`.zip` on Windows) and each release includes a `checksums.txt` with their SHA-256 sums. For example, on Linux amd64:
 
 ```bash
-# macOS / Linux
-curl -sSL https://github.com/spbuilds/repohealth/releases/latest/download/repohealth_$(uname -s)_$(uname -m).tar.gz | tar xz
+curl -sSLO https://github.com/spbuilds/repohealth/releases/download/v0.5.3/repohealth_0.5.3_linux_amd64.tar.gz
+curl -sSLO https://github.com/spbuilds/repohealth/releases/download/v0.5.3/checksums.txt
+sha256sum --ignore-missing -c checksums.txt
+tar xzf repohealth_0.5.3_linux_amd64.tar.gz repohealth
 sudo mv repohealth /usr/local/bin/
 ```
+
+On macOS use `shasum -a 256 --ignore-missing -c checksums.txt` and the matching `darwin` archive.
 
 **Build from source:**
 
@@ -235,11 +243,50 @@ repohealth . --no-color
 
 ## CI Integration
 
-Add RepoHealth to your GitHub Actions workflow:
+### GitHub Action
+
+This repository is also a composite GitHub Action. Pin it to a release tag and
+pin the `version` input to the RepoHealth release you want installed:
+
+```yaml
+- uses: actions/checkout@v7
+  with:
+    fetch-depth: 0 # full history, so the activity checks can run
+
+- name: Check repo health
+  id: repohealth
+  uses: spbuilds/repohealth@v0.5.3
+  with:
+    threshold: 70 # fail the step if the score is lower; 0 disables the check
+    format: terminal # terminal, json, markdown or html
+    version: v0.5.3 # RepoHealth release to install
+
+- name: Show the result
+  env:
+    SCORE: ${{ steps.repohealth.outputs.score }}
+    GRADE: ${{ steps.repohealth.outputs.grade }}
+  run: echo "RepoHealth score $SCORE ($GRADE)"
+```
+
+| Input | Description |
+|-------|-------------|
+| `threshold` | Minimum passing score (0-100). A lower score fails the step with exit code 2. `0`, the default, disables the check. |
+| `format` | Report format written to the job log: `terminal` (default), `json`, `markdown` or `html`. |
+| `version` | RepoHealth release to install, as a Go module version such as `v0.5.3`. |
+
+| Output | Description |
+|--------|-------------|
+| `score` | Health score, 0-100 |
+| `grade` | Letter grade, A+ to F |
+
+The action installs RepoHealth with `go install` on a Go toolchain it sets up
+itself, so it works on the standard GitHub-hosted runners without further setup.
+
+### Any CI system
 
 ```yaml
 - name: Install RepoHealth
-  run: go install github.com/spbuilds/repohealth/cmd/repohealth@latest
+  run: go install github.com/spbuilds/repohealth/cmd/repohealth@v0.5.3
 
 - name: Check repo health
   run: repohealth . --ci --threshold 70

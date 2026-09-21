@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- GitHub Action: the `version` input now defaults to a fixed release (`v0.5.3`) instead of `latest`, inputs are passed to the shell through environment variables, and `threshold` is validated as an integer between 0 and 100 before use
+- CI: workflow actions are pinned to commit SHAs, the linter version is pinned, workflow token permissions are declared explicitly, and the Action is exercised on every push and pull request
+- Dependabot configuration for Go modules and GitHub Actions
+
+### Fixed
+- README: the prebuilt-binary install instructions referenced archive names that do not exist; they now match the release assets
+- README and check reference: documented that community-file checks only see files inside the scanned repository, not organisation-level GitHub defaults
+- SECURITY.md: vulnerability reports now go through GitHub private vulnerability reporting instead of public issues
+
 ## [0.5.3] - 2026-09-21
 
 ### Fixed
