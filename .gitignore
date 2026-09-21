@@ -3,6 +3,9 @@
 
 # Go
 vendor/
+
+# Release build output (GoReleaser)
+dist/
 *.exe
 *.exe~
 *.dll

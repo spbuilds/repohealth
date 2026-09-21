@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.5.3] - Unreleased
+## [0.5.3] - 2026-09-21
 
 ### Fixed
 - Source-language coverage: every language the scanner recognises is now included in the secret scan (SEC-02), source-file statistics (STAT-01), test-to-source ratio (TST-05) and TODO scan (TODO-01 to TODO-03). Previously `.tsx`, `.jsx`, `.cs`, `.dart`, `.ex`, `.exs`, `.lua`, `.r`, `.sql`, `.html`, `.css`, `.scss`, `.bash` and `.zsh` files were skipped by these checks
