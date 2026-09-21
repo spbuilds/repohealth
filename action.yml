@@ -6,7 +6,7 @@ branding:
 
 inputs:
   threshold:
-    description: 'Minimum passing score (0-100)'
+    description: 'Minimum passing score (0-100). 0 disables the threshold check.'
     required: false
     default: '0'
   format:
@@ -14,9 +14,9 @@ inputs:
     required: false
     default: 'terminal'
   version:
-    description: 'RepoHealth version to install'
+    description: 'RepoHealth release to install, as a Go module version (for example v0.5.3)'
     required: false
-    default: 'latest'
+    default: 'v0.5.3'
 
 outputs:
   score:
@@ -30,33 +30,50 @@ runs:
   using: 'composite'
   steps:
     - name: Setup Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
       with:
-        go-version: '1.22'
+        go-version: 'stable'
+        cache: false
 
     - name: Install RepoHealth
       shell: bash
-      run: go install github.com/spbuilds/repohealth/cmd/repohealth@${{ inputs.version }}
+      env:
+        REPOHEALTH_VERSION: ${{ inputs.version }}
+      run: go install "github.com/spbuilds/repohealth/cmd/repohealth@${REPOHEALTH_VERSION}"
 
     - name: Run RepoHealth
       id: run
       shell: bash
+      env:
+        REPOHEALTH_FORMAT: ${{ inputs.format }}
+        REPOHEALTH_THRESHOLD: ${{ inputs.threshold }}
       run: |
-        OUTPUT=$(repohealth . --score-only)
-        echo "score=$(echo $OUTPUT | cut -d'/' -f1)" >> $GITHUB_OUTPUT
-        echo "grade=$(echo $OUTPUT | grep -o '([^)]*)' | tr -d '()')" >> $GITHUB_OUTPUT
-
-        if [ "${{ inputs.format }}" != "terminal" ]; then
-          repohealth . --format ${{ inputs.format }}
-        else
-          repohealth .
+        case "$REPOHEALTH_THRESHOLD" in
+          ''|*[!0-9]*)
+            echo "::error::threshold must be an integer between 0 and 100 (got '${REPOHEALTH_THRESHOLD}')"
+            exit 1
+            ;;
+        esac
+        if [ "$REPOHEALTH_THRESHOLD" -gt 100 ]; then
+          echo "::error::threshold must be an integer between 0 and 100 (got '${REPOHEALTH_THRESHOLD}')"
+          exit 1
         fi
 
-        THRESHOLD=${{ inputs.threshold }}
-        if [ "$THRESHOLD" -gt "0" ]; then
-          SCORE=$(echo $OUTPUT | cut -d'/' -f1)
-          if [ "$SCORE" -lt "$THRESHOLD" ]; then
-            echo "::error::RepoHealth score $SCORE is below threshold $THRESHOLD"
-            exit 2
-          fi
+        # --score-only prints a single line such as "81/100 (B+)"
+        SUMMARY="$(repohealth . --score-only)"
+        SCORE="${SUMMARY%%/*}"
+        GRADE="${SUMMARY##*(}"
+        GRADE="${GRADE%)}"
+        echo "score=${SCORE}" >> "$GITHUB_OUTPUT"
+        echo "grade=${GRADE}" >> "$GITHUB_OUTPUT"
+
+        if [ "$REPOHEALTH_FORMAT" = "terminal" ]; then
+          repohealth .
+        else
+          repohealth . --format "$REPOHEALTH_FORMAT"
+        fi
+
+        if [ "$REPOHEALTH_THRESHOLD" -gt 0 ] && [ "$SCORE" -lt "$REPOHEALTH_THRESHOLD" ]; then
+          echo "::error::RepoHealth score ${SCORE} is below threshold ${REPOHEALTH_THRESHOLD}"
+          exit 2
         fi
